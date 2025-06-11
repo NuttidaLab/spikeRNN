@@ -22,8 +22,7 @@ Development Setup
    source spikeRNN_dev/bin/activate  # On Windows: spikeRNN_dev\Scripts\activate
    
    # Install in development mode
-   cd rate && pip install -e . && cd ..
-   cd spiking && pip install -e . && cd ..
+   pip install -e .
    
    # Install development dependencies
    pip install pytest black flake8 mypy sphinx
