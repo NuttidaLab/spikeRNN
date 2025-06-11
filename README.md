@@ -1,7 +1,6 @@
 # SpikeRNN Framework
 
-This is a PyTorch framework for constructing functional spiking recurrent neural networks from continuous rate models, based on the framework presented in [this paper](https://www.pnas.org/content/
-116/45/22811)
+This is a PyTorch framework for constructing functional spiking recurrent neural networks from continuous rate models, based on the framework presented in [this paper](https://www.pnas.org/content/116/45/22811)
 
 The SpikeRNN framework consists of two complementary packages:
 
@@ -21,9 +20,7 @@ The SpikeRNN framework consists of two complementary packages:
 
 ## Installation
 
-### Unified Installation (Recommended)
-
-Both rate and spiking packages can now be installed together with a single command:
+Install both rate and spiking packages:
 
 ```bash
 git clone https://github.com/NuttidaLab/spikeRNN.git
@@ -34,12 +31,8 @@ pip install -e .
 After installation, you can import both packages:
 
 ```python
-import spikeRNN
-from spikeRNN import rate, spiking
-
-# Or import directly from subpackages
-from spikeRNN.rate import FR_RNN_dale, set_gpu, create_default_config
-from spikeRNN.spiking import LIF_network_fnc, lambda_grid_search, eval_go_nogo
+from rate import FR_RNN_dale, set_gpu, create_default_config
+from spiking import LIF_network_fnc, lambda_grid_search, eval_go_nogo
 ```
 
 ## Requirements
@@ -69,9 +62,9 @@ from spikeRNN.spiking import LIF_network_fnc, lambda_grid_search, eval_go_nogo
 import numpy as np
 import torch
 import scipy.io as sio
-from spikeRNN.rate import FR_RNN_dale, set_gpu, create_default_config
-from spikeRNN.rate.model import generate_input_stim_go_nogo, generate_target_continuous_go_nogo
-from spikeRNN.spiking import LIF_network_fnc, lambda_grid_search
+from rate import FR_RNN_dale, set_gpu, create_default_config
+from rate.model import generate_input_stim_go_nogo, generate_target_continuous_go_nogo
+from spiking import LIF_network_fnc, lambda_grid_search
 
 # Step 1: Set up and train rate RNN
 device = set_gpu('0', 0.3)
@@ -107,7 +100,7 @@ model_dict = {
     'taus_gaus': net.taus_gaus.detach().cpu().numpy(),
     'taus_gaus0': net.taus_gaus0.detach().cpu().numpy(),
 }
-sio.savemat('path/to/trained/model.mat', model_dict)
+sio.savemat('trained_model.mat', model_dict)
 
 # Step 2: Convert to spiking network
 scaling_factor = 50.0
@@ -115,7 +108,7 @@ u = np.zeros((1, 201))
 u[0, 30:50] = 1  # Go trial stimulus
 
 W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(
-    'path/to/trained/model.mat', scaling_factor, u, {'mode': 'none'},
+    'trained_model.mat', scaling_factor, u, {'mode': 'none'},
     downsample=1, use_initial_weights=False
 )
 
@@ -127,8 +120,8 @@ print(f"Network output: {out[-1]:.4f}")
 ### Training Rate RNNs
 
 ```python
-from spikeRNN.rate import FR_RNN_dale, set_gpu
-from spikeRNN.rate.model import generate_input_stim_go_nogo, generate_target_continuous_go_nogo
+from rate import FR_RNN_dale, set_gpu
+from rate.model import generate_input_stim_go_nogo, generate_target_continuous_go_nogo
 
 # Set up device and network
 device = set_gpu('0', 0.4)
@@ -142,11 +135,11 @@ net = FR_RNN_dale(200, 0.2, 0.2, w_in, som_N=0, w_dist='gaus',
 ### Converting to Spiking Networks
 
 ```python
-from spikeRNN.spiking import LIF_network_fnc, lambda_grid_search, eval_go_nogo
+from spiking import LIF_network_fnc, lambda_grid_search, eval_go_nogo
 
 # Optimize scaling factor
 lambda_grid_search(
-    model_path='models/go-nogo/model.mat',
+    model_path='models/go-nogo/trained_model.mat',
     scaling_range=(20, 80),
     task_type='go-nogo',
     parallel=True
@@ -154,7 +147,7 @@ lambda_grid_search(
 
 # Evaluate performance
 eval_go_nogo(
-    model_path='models/go-nogo/model.mat',
+    model_path='models/go-nogo/trained_model.mat',
     scaling_factor=50.0,
     plot_results=True
 )
@@ -180,32 +173,6 @@ Context-dependent sensory integration:
 - Context determines relevant modality
 - Tests flexible cognitive control
 
-## Key Components
-
-### Rate Package
-
-**Core Classes:**
-- `FR_RNN_dale`: Main rate RNN class with Dale's principle
-- `RNNConfig`: Configuration dataclass for rate RNN parameters
-- `AbstractRateRNN`: Base class for rate RNN implementations
-
-**Key Functions:**
-- `set_gpu()`: GPU device configuration
-- `create_default_config()`: Create default configuration
-- `generate_input_stim_*()`: Task stimulus generation
-- `generate_target_continuous_*()`: Task target generation
-
-### Spiking Package
-
-**Core Functions:**
-- `LIF_network_fnc()`: Rate-to-spike conversion and simulation
-- `lambda_grid_search()`: Scaling factor optimization
-- `eval_go_nogo()`: Go-NoGo task evaluation
-
-**Configuration:**
-- `SpikingConfig`: Configuration dataclass for spiking RNNs
-- `create_default_spiking_config()`: Default configuration
-- `AbstractSpikingRNN`: Base class for spiking RNN implementations
 
 ## Model File Requirements
 
@@ -222,32 +189,6 @@ The rate package save models in two formats:
 - Initial weight states (`w0`)
 - Network size and architecture (`N`)
 
-## Package Structure
-
-```
-spikeRNN/
-├── rate/                    # Rate RNN package
-│   ├── __init__.py         # Package initialization
-│   ├── model.py            # FR_RNN_dale and task functions
-│   ├── utils.py            # Utility functions
-│   ├── abstract.py         # Abstract base classes
-│   └── README.md           # Rate package documentation
-├── spiking/                # Spiking RNN package  
-│   ├── __init__.py         # Package initialization
-│   ├── LIF_network_fnc.py  # Core conversion function
-│   ├── eval_go_nogo.py     # Go-NoGo evaluation
-│   ├── lambda_grid_search.py # Scaling optimization
-│   ├── utils.py            # Utility functions
-│   ├── abstract.py         # Abstract base classes
-│   └── README.md           # Spiking package documentation
-├── docs/                   # Unified documentation
-├── models/                 # Pre-trained models
-├── setup.py               # Unified installation script
-├── requirements.txt       # Unified dependencies
-├── MANIFEST.in            # Unified package manifest
-├── __init__.py            # Main package initialization
-└── README.md              # Main documentation
-```
 
 ## Examples
 
@@ -256,8 +197,8 @@ spikeRNN/
 ```python
 import torch
 import scipy.io as sio
-from spikeRNN.rate import FR_RNN_dale, set_gpu
-from spikeRNN.rate.model import generate_input_stim_go_nogo, generate_target_continuous_go_nogo, loss_op
+from rate import FR_RNN_dale, set_gpu
+from rate.model import generate_input_stim_go_nogo, generate_target_continuous_go_nogo, loss_op
 
 # Setup
 device = set_gpu('0', 0.4)
@@ -304,7 +245,7 @@ sio.savemat('trained_model.mat', model_dict)
 ### Spiking Network Analysis Example
 
 ```python
-from spikeRNN.spiking import LIF_network_fnc, format_spike_data
+from spiking import LIF_network_fnc, format_spike_data
 import matplotlib.pyplot as plt
 
 # Convert and simulate
@@ -357,7 +298,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](docs/contributing.rst) fo
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENCE](LICENCE) file for details.
 
 ## Links
 

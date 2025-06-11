@@ -116,7 +116,7 @@ setup(
     project_urls={
         "Bug Reports": "https://github.com/NuttidaLab/spikeRNN/issues",
         "Source": "https://github.com/NuttidaLab/spikeRNN",
-        "Documentation": "https://spikeRNN.readthedocs.io/",
+        "Documentation": "https://nuttidalab.github.io/spikeRNN/",
     },
     
     # Zip safety
