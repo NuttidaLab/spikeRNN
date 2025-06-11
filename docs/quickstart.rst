@@ -12,12 +12,7 @@ First, install both packages:
 
    git clone https://github.com/NuttidaLab/spikeRNN.git
    cd spikeRNN
-
-   # Install rate RNN package
-   cd rate && pip install -e . && cd ..
-
-   # Install spiking RNN package  
-   cd spiking && pip install -e . && cd ..
+   pip install -e .
 
 Basic Workflow
 --------------------------------------------------
