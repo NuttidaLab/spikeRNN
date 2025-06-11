@@ -1,20 +1,15 @@
 Installation
 ============
 
-SpikeRNN consists of two complementary packages that can be installed independently or together.
+SpikeRNN consists of two complementary packages `rate` and `spiking`.
 
 Requirements
 ----------------------------------------------------------------------
-
-**Common Requirements:**
 
 * Python >= 3.7
 * PyTorch >= 1.8.0
 * NumPy >= 1.16.4
 * SciPy >= 1.3.1
-
-**Additional Requirements for Spiking Package:**
-
 * Matplotlib >= 3.0.0
 
 Installing Both Packages
@@ -26,34 +21,6 @@ To install the complete SpikeRNN framework with both rate and spiking packages:
 
    git clone https://github.com/NuttidaLab/spikeRNN.git
    cd spikeRNN
-
-   # Install rate RNN package
-   cd rate
-   pip install -e .
-   cd ..
-
-   # Install spiking RNN package  
-   cd spiking
-   pip install -e .
-   cd ..
-
-Installing Individual Packages
-----------------------------------------------------------------------
-
-**Rate RNN Package Only:**
-
-.. code-block:: bash
-
-   git clone https://github.com/NuttidaLab/spikeRNN.git
-   cd spikeRNN/rate
-   pip install -e .
-
-**Spiking RNN Package Only:**
-
-.. code-block:: bash
-
-   git clone https://github.com/NuttidaLab/spikeRNN.git
-   cd spikeRNN/spiking
    pip install -e .
 
 Development Installation
