@@ -18,22 +18,7 @@ Installation
 
    git clone https://github.com/NuttidaLab/spikeRNN.git
    cd spikeRNN
-   
-   # Install rate RNN package
-   cd rate && pip install -e . && cd ..
-   
-   # Install spiking RNN package
-   cd spiking && pip install -e . && cd ..
-
-**Installing Individual Packages:**
-
-.. code-block:: bash
-
-   # Rate RNN only
-   cd rate && pip install -e .
-   
-   # Spiking RNN only
-   cd spiking && pip install -e .
+   pip install -e . 
 
 Quick Start
 -----------------------------------------
