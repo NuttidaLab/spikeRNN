@@ -166,7 +166,7 @@ Convert a trained rate RNN to a spiking network:
     import matplotlib.pyplot as plt
 
     # Load trained model (.mat files only for spiking conversion)
-    model_path = 'path/to/trained/model.mat'
+    model_path = 'trained_model.mat'
     scaling_factor = 50.0
     
     # Create test stimulus
@@ -194,7 +194,7 @@ Finding the optimal scaling factor is crucial for good performance:
     
     # Comprehensive grid search
     lambda_grid_search(
-        model_path='models/go-nogo/model.mat',
+        model_path='models/go-nogo/trained_model.mat',
         scaling_range=(20, 100),
         n_trials_per_factor=100,
         task_type='go-nogo',
@@ -212,7 +212,7 @@ Evaluate converted spiking networks:
     
     # Evaluate Go-NoGo performance
     eval_go_nogo(
-        model_path='models/go-nogo/model.mat',
+        model_path='models/go-nogo/trained_model.mat',
         scaling_factor=50.0,
         n_trials=200,
         plot_results=True
@@ -231,9 +231,9 @@ Process multiple models:
     # Process all .mat models in directory
     model_dir = 'models/'
     model_paths = [
-        'models/go-nogo/model.mat',
-        'models/xor/model.mat',
-        'models/mante/model.mat'
+        'models/go-nogo/trained_model.mat',
+        'models/xor/trained_model.mat',
+        'models/mante/trained_model.mat'
     ]
     
     results = {}
@@ -260,7 +260,7 @@ Advanced Analysis
     import matplotlib.pyplot as plt
     
     # Load and convert model
-    model_path = 'models/go-nogo/model.mat'
+    model_path = 'models/go-nogo/trained_model.mat'
 
     # Format spike data for analysis
     spike_data = format_spike_data(spk, params['dt'])
@@ -291,9 +291,9 @@ Compare spiking network performance across different tasks:
 
     tasks = ['go-nogo', 'xor', 'mante']
     model_paths = [
-        'models/go-nogo/model.mat',
-        'models/xor/model.mat', 
-        'models/mante/model.mat'
+        'models/go-nogo/trained_model.mat',
+        'models/xor/trained_model.mat', 
+        'models/mante/trained_model.mat'
     ]
 
     for task, model_path in zip(tasks, model_paths):
@@ -319,7 +319,7 @@ Test how different LIF parameters affect conversion:
 
     from spiking.utils import generate_lif_params
 
-    model_path = 'models/go-nogo/model.mat'
+    model_path = 'models/go-nogo/trained_model.mat'
     scaling_factor = 50.0
     u = np.zeros((1, 201))
     u[0, 30:50] = 1

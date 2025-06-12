@@ -58,24 +58,6 @@ def load_rate_model(model_path: str) -> Dict[str, Any]:
         raise ValueError(f"Failed to load model from {model_path}: {str(e)}")
 
 
-# Keep the old function name for backward compatibility
-def load_rate_model_mat(model_path: str) -> Dict[str, Any]:
-    """
-    Load a trained rate RNN model from MATLAB .mat file.
-    
-    DEPRECATED: Use load_rate_model() instead.
-    
-    Args:
-        model_path (str): Path to the .mat model file.
-        
-    Returns:
-        Dict[str, Any]: Dictionary containing model data.
-    """
-    warnings.warn("load_rate_model_mat() is deprecated. Use load_rate_model() instead.", 
-                 DeprecationWarning, stacklevel=2)
-    return load_rate_model(model_path)
-
-
 def create_connectivity_masks(N: int, P_inh: float = 0.2, som_N: int = 0, 
                             apply_dale: bool = True, seed: Optional[int] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """

@@ -1,4 +1,4 @@
-Rate RNN Package API
+Rate RNN
 ====================
 
 The rate package provides continuous-variable rate RNN implementations for training models on cognitive tasks.
@@ -11,7 +11,6 @@ Core Modules
 
    model
    utils
-   abstract
 
 Module Overview
 ---------------
@@ -22,9 +21,6 @@ Module Overview
 **utils.py**
     Utility functions for GPU management, training helpers, and network configuration.
 
-**abstract.py**
-    Abstract base classes and configuration management for rate RNNs.
-
 Quick Reference
 ---------------
 
@@ -32,7 +28,6 @@ Quick Reference
 
 * ``FR_RNN_dale``: Main rate RNN class with Dale's principle
 * ``RNNConfig``: Configuration dataclass for rate RNN parameters
-* ``AbstractRateRNN``: Base class for rate RNN implementations
 
 **Key Functions:**
 

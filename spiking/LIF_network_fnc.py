@@ -1,3 +1,12 @@
+"""
+Function for converting a trained rate RNN to a spiking RNN (leaky integrate-and-fire).
+
+The function:
+
+* Converts a trained rate RNN to a spiking RNN (leaky integrate-and-fire)
+* Uses the LIF model for the spiking RNN
+"""
+
 # PyTorch adaptation of the function to perform the one-to-one mapping
 # from a trained rate RNN to a spiking RNN (leaky integrate-and-fire).
 

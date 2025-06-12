@@ -1,0 +1,44 @@
+/* Main headings */
+main.bd-content div.section h1,
+div.bd-article-container h1 {
+    font-size: 2.5em !important;
+    font-weight: bold !important;
+    color: #000000 !important;
+    margin-bottom: 0.5em !important;
+    border-bottom: 2px solid #ccc !important;
+    padding-bottom: 0.2em !important;
+}
+
+/* Section headings */
+main.bd-content div.section h2,
+div.bd-article-container h2 {
+    font-size: 2em !important;
+    font-weight: 600 !important;
+    color: #000000 !important;
+    margin-top: 1.5em !important;
+    margin-bottom: 0.5em !important;
+    border-bottom: 1px solid #eee !important;
+}
+
+/* Subsection headings */
+main.bd-content div.section h3,
+div.bd-article-container h3 {
+    font-size: 1.5em !important;
+    font-weight: 500 !important;
+    color: #2c3e50 !important;
+    margin-top: 1em !important;
+    margin-bottom: 0.5em !important;
+}
+
+/* Table of contents */
+nav.bd-toc .toc-entry a {
+    font-size: 1.1em !important;
+    color: #2c3e50 !important;
+    margin: 0.5em 0 !important;
+}
+
+/* Navigation sidebar */
+.bd-sidebar .bd-sidebar__content {
+    font-size: 1.1em !important;
+    color: #2c3e50 !important;
+}

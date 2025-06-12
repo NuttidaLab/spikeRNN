@@ -1,13 +1,15 @@
 LIF Network Function
-==================
+====================================================
 
-.. automodule:: spiking.LIF_network_fnc
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Function for converting a trained rate RNN to a spiking RNN (leaky integrate-and-fire).
 
-Function Signature
--------------------
+The function:
+
+* Converts a trained rate RNN to a spiking RNN (leaky integrate-and-fire)
+* Uses the LIF model for the spiking RNN
+
+Main Function
+---------------------------------------------------
 
 .. py:function:: LIF_network_fnc(model_path, scaling_factor, u, stims, downsample, use_initial_weights)
 
@@ -24,9 +26,9 @@ Function Signature
    :rtype: tuple
 
 Parameters
-------------------------------
+---------------------------------------------------
 
-* **model_path** (str): Path to the trained rate RNN model file (.mat format)
+* **model_path** (str): Path to the trained rate RNN model file (`.mat` format)
   
   The model file must contain all necessary parameters for spiking conversion including:
   
@@ -53,7 +55,7 @@ Parameters
 * **use_initial_weights** (bool): If True, uses initial random weights instead of trained weights. Mainly for testing purposes.
 
 Returns
-----------------------------------------------------
+--------------------------------------------------------------------
 
 * **W** (numpy.ndarray): Scaled recurrent connectivity matrix (N × N)
 * **REC** (numpy.ndarray): Membrane voltage traces for all neurons (timesteps × N)  
@@ -64,7 +66,7 @@ Returns
 * **params** (dict): Simulation parameters including sampling rate and LIF constants
 
 Example Usage
-----------------------------------------------------
+--------------------------------------------------------------------
 
 Basic rate-to-spike conversion:
 
@@ -74,7 +76,7 @@ Basic rate-to-spike conversion:
    from spiking import LIF_network_fnc
    
    # Load trained rate model and convert to spiking
-   model_path = 'path/to/trained/model.mat'
+   model_path = 'trained_model.mat'
    scaling_factor = 50.0
    
    # Create Go trial stimulus

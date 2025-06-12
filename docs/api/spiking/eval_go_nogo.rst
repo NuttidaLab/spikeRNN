@@ -1,22 +1,8 @@
 Go-NoGo Evaluation
 ==================
+Functions for evaluating a trained LIF RNN model constructed to perform the Go-NoGo task.
 
-.. automodule:: spiking.eval_go_nogo
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Main Function
--------------
-
-.. autofunction:: spiking.eval_go_nogo.eval_go_nogo
-
-Description
------------
-
-The eval_go_nogo module provides functions for evaluating spiking neural network performance 
-on the Go-NoGo cognitive task. This task requires the network to respond to "Go" stimuli 
-and withhold responses to "NoGo" stimuli, testing impulse control and decision-making capabilities.
+This task requires the network to respond to “Go” stimuli and withhold responses to “NoGo” stimuli, testing impulse control and decision-making capabilities.
 
 The evaluation includes:
 
@@ -24,6 +10,11 @@ The evaluation includes:
 * Spike raster plot visualization
 * Response time analysis
 * Accuracy metrics for Go and NoGo trials
+
+Main Function
+-------------
+
+.. autofunction:: spiking.eval_go_nogo.eval_go_nogo
 
 Function Parameters
 -------------------
@@ -47,7 +38,7 @@ Example Usage
 
    # Evaluate specific model with custom parameters
    eval_go_nogo(
-       model_path='models/go-nogo/model.mat',
+       model_path='models/go-nogo/trained_model.mat',
        scaling_factor=50.0,
        n_trials=100,
        plot_results=True

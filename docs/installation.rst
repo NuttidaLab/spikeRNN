@@ -1,7 +1,7 @@
 Installation
 ============
 
-SpikeRNN consists of two complementary packages `rate` and `spiking`.
+SpikeRNN consists of two complementary packages: :doc:`api/rate/index` and :doc:`api/spiking/index`.
 
 Requirements
 ----------------------------------------------------------------------
@@ -12,7 +12,7 @@ Requirements
 * SciPy >= 1.3.1
 * Matplotlib >= 3.0.0
 
-Installing Both Packages
+Installing SpikeRNN
 ----------------------------------------------------------------------
 
 To install the complete SpikeRNN framework with both rate and spiking packages:

@@ -1,3 +1,16 @@
+"""
+Functions for optimizing the scaling factor (lambda) used in rate-to-spike conversion. 
+The scaling factor is crucial for maintaining task performance 
+when converting from continuous rate dynamics to discrete spiking dynamics.
+
+The optimization process:
+
+* Tests multiple scaling factors across a predefined range
+* Evaluates spiking network performance for each scaling factor
+* Uses parallel processing for efficient computation
+* Saves the optimal scaling factor to the model file
+* Supports all cognitive tasks (Go-NoGo, XOR, Mante)
+"""
 # PyTorch adaptation of the script to perform grid search to determine
 # the optimal scaling factor (lambda) for one-to-one mapping
 # from a trained rate RNN to a LIF RNN

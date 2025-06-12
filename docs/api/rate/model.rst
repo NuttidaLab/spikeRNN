@@ -1,11 +1,7 @@
 Rate RNN Model
 ============================================
 
-.. automodule:: rate.model
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :noindex:
+The main FR_RNN_dale class and task-specific functions for creating stimuli and targets.
 
 Main Model Class
 ----------------------------------------

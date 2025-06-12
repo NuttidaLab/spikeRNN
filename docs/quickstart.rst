@@ -285,7 +285,8 @@ Next Steps
 ----------
 
 - Explore the :doc:`examples` for detailed use cases
-- Review the :doc:`api` for all available functions
+- Review the API Reference for all available functions
 - Check out advanced features in the individual package documentation:
+
   - `Rate package <../rate/README.md>`_
   - `Spiking package <../spiking/README.md>`_ 

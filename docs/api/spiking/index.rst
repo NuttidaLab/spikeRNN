@@ -1,7 +1,8 @@
-Spiking RNN Package API
+Spiking RNN
 =======================
 
 The spiking package provides leaky integrate-and-fire (LIF) spiking neural networks mapped from continuous rate RNNs.
+
 
 Core Modules
 ------------
@@ -13,7 +14,6 @@ Core Modules
    eval_go_nogo
    lambda_grid_search
    utils
-   abstract
 
 Module Overview
 ---------------
@@ -29,9 +29,6 @@ Module Overview
 
 **utils.py**
     Utility functions for model loading, network configuration, and spike data analysis.
-
-**abstract.py**
-    Abstract base classes and configuration management for spiking RNNs.
 
 Quick Reference
 ---------------
@@ -49,12 +46,5 @@ Quick Reference
 
 **Utility Functions:**
 
-* ``load_rate_model_pth()``: Load PyTorch rate models
-* ``load_rate_model_mat()``: Load MATLAB rate models
+* ``load_rate_model()``: Load PyTorch rate models
 * ``format_spike_data()``: Format spike data for analysis
-
-**Abstract Classes:**
-
-* ``AbstractSpikingRNN``: Base class for spiking RNN implementations
-* ``AbstractSpikingConverter``: Base class for rate-to-spike converters
-* ``AbstractSpikingEvaluator``: Base class for spiking network evaluators

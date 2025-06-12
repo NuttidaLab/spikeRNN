@@ -1,34 +1,20 @@
-Spiking Utility Functions
+Utilities
 =========================
 
-.. automodule:: spiking.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Utility functions for spiking neural networks.
 
-Overview
-----------------------------------------------------
-
-The utils module provides essential utility functions for the spiking neural networks package,
-including model loading, data validation, and network analysis tools.
-
-Key Features:
-
-* MATLAB .mat model file loading and validation
-* Connectivity mask generation for Dale's principle
-* Input stimulus validation for different cognitive tasks
-* Spike train analysis and formatting
-* GPU availability checking
-* Random seed management for reproducibility
+This module provides utility functions for loading rate models,
+generating connectivity parameters, and validating inputs for 
+spiking neural network simulations.
 
 Model Loading
 ----------------------------------------------------
 
 .. py:function:: load_rate_model(model_path)
 
-   Load a trained rate RNN model from MATLAB .mat file.
+   Load a trained rate RNN model from MATLAB `.mat` file.
    
-   Only .mat files are supported as they contain all necessary parameters for
+   Only `.mat` files are supported as they contain all necessary parameters for
    accurate rate-to-spike conversion, including connectivity masks, neuron types,
    and time constants.
 
@@ -36,36 +22,8 @@ Model Loading
    :returns: Dictionary containing model parameters
    :rtype: dict
    :raises FileNotFoundError: If model file doesn't exist
-   :raises ValueError: If file is not .mat format or corrupted
+   :raises ValueError: If file is not `.mat` format or corrupted
 
-Example Usage
-----------------------------------------------------
-
-Loading and validating models:
-
-.. code-block:: python
-
-   from spiking.utils import load_rate_model, validate_stimulus
-   
-   # Load .mat model file
-   model_data = load_rate_model('model.mat')
-   
-   # Check required parameters
-   required_keys = ['w', 'w_in', 'w_out', 'N', 'inh', 'exc', 'taus']
-   missing = [k for k in required_keys if k not in model_data]
-   if missing:
-       print(f"Warning: Missing parameters {missing}")
-
-Creating connectivity patterns:
-
-.. code-block:: python
-
-   from spiking.utils import create_connectivity_masks
-   
-   # Generate connectivity for 200-neuron network
-   inh, exc, m, som_m = create_connectivity_masks(
-       N=200, P_inh=0.2, som_N=10, apply_dale=True, seed=42
-   )
 
 Network Configuration
 ----------------------------------------------------
@@ -90,34 +48,6 @@ Analysis and Formatting
 
 .. autofunction:: spiking.utils.set_random_seed
 
-Description
-----------------------------------------------------
-
-The spiking.utils module provides essential utility functions for working with spiking neural networks. 
-These functions handle model loading, network configuration, input validation, and spike data analysis.
-
-Key Features
-------------
-
-**Model Loading:**
-* Support for MATLAB .mat model files
-* Automatic validation of model structure and required parameters
-* GPU memory management for large models
-
-**Network Configuration:**
-* Generate connectivity masks for Dale's principle
-* Create default LIF neuron parameters
-* Support for somatostatin (SOM) neuron types
-
-**Data Validation:**
-* Validate input stimulus format for different tasks
-* Check scaling factor ranges and validity
-* Ensure compatibility between rate and spiking models
-
-**Spike Analysis:**
-* Format spike trains for analysis and visualization
-* Calculate firing rates and spike statistics
-* Extract spike timing information
 
 Example Usage
 ----------------------------------------------------
@@ -129,7 +59,7 @@ Example Usage
    from spiking.utils import load_rate_model
 
    # Load .mat model file
-   model_data = load_rate_model('model.mat')
+   model_data = load_rate_model('trained_model.mat')
 
 **Creating Network Connectivity:**
 
@@ -199,7 +129,7 @@ Function Details
 ----------------------------------------------------
 
 **load_rate_model(model_path)**
-    Load a trained rate RNN model from MATLAB .mat file.
+    Load a trained rate RNN model from MATLAB `.mat` file.
 
 **create_connectivity_masks(N, P_inh, som_N, apply_dale, seed)**
     Generate connectivity masks for inhibitory/excitatory neurons and SOM types.
@@ -212,9 +142,3 @@ Function Details
 
 **format_spike_data(spikes, dt)**
     Convert binary spike matrix to analysis-ready format with timing information.
-
-**check_gpu_availability()**
-    Return GPU availability status and device information.
-
-**set_random_seed(seed)**
-    Set random seeds for NumPy, PyTorch, and CUDA for reproducible results. 

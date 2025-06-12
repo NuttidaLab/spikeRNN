@@ -1,23 +1,8 @@
 Scaling Factor Grid Search
-==========================
+====================================================
 
-.. automodule:: spiking.lambda_grid_search
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Main Function
--------------
-
-.. autofunction:: spiking.lambda_grid_search.lambda_grid_search
-
-.. autofunction:: spiking.lambda_grid_search.evaluate_single_trial
-
-Description
------------
-
-The lambda_grid_search module provides functions for optimizing the scaling factor (lambda) 
-used in rate-to-spike conversion. The scaling factor is crucial for maintaining task performance 
+Functions for optimizing the scaling factor (lambda) used in rate-to-spike conversion. 
+The scaling factor is crucial for maintaining task performance 
 when converting from continuous rate dynamics to discrete spiking dynamics.
 
 The optimization process:
@@ -28,8 +13,15 @@ The optimization process:
 * Saves the optimal scaling factor to the model file
 * Supports all cognitive tasks (Go-NoGo, XOR, Mante)
 
+Main Functions
+----------------------------------------------------
+
+.. autofunction:: spiking.lambda_grid_search.lambda_grid_search
+
+.. autofunction:: spiking.lambda_grid_search.evaluate_single_trial
+
 Grid Search Parameters
-----------------------
+----------------------------------------------------
 
 The main grid search function accepts:
 
@@ -40,7 +32,7 @@ The main grid search function accepts:
 * **parallel** (bool, optional): Whether to use parallel processing
 
 Single Trial Evaluation
-------------------------
+----------------------------------------------------
 
 The evaluate_single_trial function tests a specific scaling factor:
 
@@ -51,7 +43,7 @@ The evaluate_single_trial function tests a specific scaling factor:
 Returns performance metrics for the given scaling factor.
 
 Example Usage
--------------
+----------------------------------------------------
 
 .. code-block:: python
 
@@ -62,7 +54,7 @@ Example Usage
 
    # Grid search with custom parameters
    lambda_grid_search(
-       model_path='models/go-nogo/model.mat',
+       model_path='models/go-nogo/trained_model.mat',
        scaling_range=(30, 80),
        n_trials_per_factor=50,
        task_type='go-nogo',
@@ -73,13 +65,13 @@ Example Usage
    from spiking.lambda_grid_search import evaluate_single_trial
    
    performance = evaluate_single_trial(
-       model_path='models/go-nogo/model.mat',
+       model_path='models/go-nogo/trained_model.mat',
        scaling_factor=50.0,
        trial_params={'stimulus': stimulus, 'task': 'go-nogo'}
    )
 
 Optimization Process
---------------------
+----------------------------------------------------
 
 The grid search follows these steps:
 
@@ -92,7 +84,7 @@ The grid search follows these steps:
 7. **Save optimal value** to model file for future use
 
 Performance Metrics
--------------------
+----------------------------------------------------
 
 Different metrics are used depending on the task:
 
@@ -110,7 +102,7 @@ Different metrics are used depending on the task:
 * Sensory integration performance
 
 Parallel Processing
--------------------
+----------------------------------------------------
 
 The module supports parallel processing using Python's multiprocessing:
 
@@ -123,7 +115,7 @@ The module supports parallel processing using Python's multiprocessing:
    lambda_grid_search(parallel=False)
 
 Output
-------
+----------------------------------------------------
 
 The function outputs:
 

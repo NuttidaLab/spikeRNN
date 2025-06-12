@@ -1,10 +1,7 @@
-Rate Utilities
+Utilities
 ============================================
 
-.. automodule:: rate.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Utility functions for GPU management, training helpers, and network configuration.
 
 GPU Management
 ----------------------------------------

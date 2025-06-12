@@ -58,7 +58,6 @@ from .eval_go_nogo import eval_go_nogo
 # Utility functions 
 from .utils import (
     load_rate_model,
-    load_rate_model_mat,
     create_connectivity_masks,
     generate_lif_params,
     validate_stimulus,
