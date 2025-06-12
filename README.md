@@ -302,7 +302,7 @@ MIT License - see [LICENCE](LICENCE) file for details.
 
 ## Links
 
-- **Documentation**: [Read the Docs](https://spikeRNN.readthedocs.io/)
+- **Documentation**: [Read the Docs](https://nuttidalab.github.io/spikeRNN/)
 - **Issues**: [GitHub Issues](https://github.com/NuttidaLab/spikeRNN/issues)
 - **Rate Package**: [rate/](rate/)
 - **Spiking Package**: [spiking/](spiking/)
