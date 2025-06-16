@@ -56,67 +56,6 @@ from spiking import LIF_network_fnc, lambda_grid_search, eval_go_nogo
 
 ## Quick Start
 
-### Complete Workflow
-
-```python
-import numpy as np
-import torch
-import scipy.io as sio
-from rate import FR_RNN_dale, set_gpu, create_default_config
-from rate.model import generate_input_stim_go_nogo, generate_target_continuous_go_nogo
-from spiking import LIF_network_fnc, lambda_grid_search
-
-# Step 1: Set up and train rate RNN
-device = set_gpu('0', 0.3)
-config = create_default_config(N=200, P_inh=0.2, P_rec=0.2)
-
-# Initialize network
-w_in = torch.randn(200, 1, device=device)
-w_out = torch.randn(1, 200, device=device) / 100
-net = FR_RNN_dale(200, 0.2, 0.2, w_in, som_N=0, w_dist='gaus',
-                  gain=1.5, apply_dale=True, w_out=w_out, device=device)
-
-# Generate task data
-settings = {'T': 200, 'stim_on': 50, 'stim_dur': 25, 'DeltaT': 1,
-           'taus': [10], 'task': 'go-nogo'}
-u, label = generate_input_stim_go_nogo(settings)
-target = generate_target_continuous_go_nogo(settings, label)
-
-# Train network (simplified)
-# ... training loop ...
-
-# Save trained model as .mat for spiking conversion
-model_dict = {
-    'w': net.w.detach().cpu().numpy(),
-    'w_in': net.w_in.detach().cpu().numpy(),
-    'w_out': net.w_out.detach().cpu().numpy(),
-    'w0': net.w0.detach().cpu().numpy(),
-    'N': 200,
-    'm': net.m.cpu().numpy(),
-    'som_m': net.som_m.cpu().numpy(),
-    'inh': net.inh.cpu().numpy(),
-    'exc': net.exc.cpu().numpy(),
-    'taus': settings['taus'],
-    'taus_gaus': net.taus_gaus.detach().cpu().numpy(),
-    'taus_gaus0': net.taus_gaus0.detach().cpu().numpy(),
-}
-sio.savemat('trained_model.mat', model_dict)
-
-# Step 2: Convert to spiking network
-scaling_factor = 50.0
-u = np.zeros((1, 201))
-u[0, 30:50] = 1  # Go trial stimulus
-
-W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(
-    'trained_model.mat', scaling_factor, u, {'mode': 'none'},
-    downsample=1, use_initial_weights=False
-)
-
-print(f"Rate-to-spike conversion completed!")
-print(f"Generated {np.sum(spk)} spikes")
-print(f"Network output: {out[-1]:.4f}")
-```
-
 ### Training Rate RNNs
 
 ```python
@@ -209,7 +148,7 @@ If you use this framework in your research, please cite:
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](docs/contributing.rst) for guidelines.
+We welcome contributions! Please see [Contributing to SpikeRNN](https://nuttidalab.github.io/spikeRNN/contributing.html) for guidelines.
 
 1. Fork the repository
 2. Create a feature branch
