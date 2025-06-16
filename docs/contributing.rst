@@ -144,22 +144,26 @@ Types of Contributions
 ---------------------------------------------------
 
 **Bug Fixes:**
+
 * Include reproduction steps
 * Add regression tests
 * Update documentation if needed
 
 **New Features:**
+
 * Discuss design in an issue first
 * Include comprehensive tests
 * Update API documentation
 * Add examples if appropriate
 
 **Performance Improvements:**
+
 * Include benchmarks showing improvement
 * Ensure no functionality regressions
 * Document performance characteristics
 
 **Documentation:**
+
 * Fix typos and improve clarity
 * Add examples and tutorials
 * Update API documentation
@@ -210,12 +214,14 @@ Code Review Guidelines
 ---------------------------------------------------
 
 **For Reviewers:**
+
 * Check code follows style guidelines
 * Verify tests cover new functionality
 * Ensure documentation is updated
 * Test the changes locally
 
 **For Authors:**
+
 * Respond to feedback promptly
 * Make requested changes
 * Update PR description as needed
