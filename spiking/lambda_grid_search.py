@@ -162,9 +162,29 @@ def evaluate_single_trial(args):
     
     return 0, np.zeros((1, 1000))
 
-def lambda_grid_search():
+def lambda_grid_search(model_dir =  '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0', n_trials = 100, scaling_factors = list(range(20, 76, 5)), task_name = 'go-nogo'):
+    """
+    Perform a grid search to find the optimal scaling factor for a given task.
+    
+    Args:
+        model_dir (str): The directory containing the trained rate RNN model .mat files.
+            Default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0'
+        n_trials (int): The number of trials to use to evaluate the LIF RNN.
+            Default: 100
+        scaling_factors (list): The scaling factor values to try for grid search.
+            Default: [20, 25, 30, ..., 75]
+        task_name (str): The name of the task to evaluate ('go-nogo', 'xor', or 'mante').
+            Default: 'go-nogo'
+    
+    The optimal scaling factor and performance metrics are saved back to the original .mat file
+    with the following new fields:
+    - opt_scaling_factor: The scaling factor that achieved best performance
+    - all_perfs: Performance scores for all tested scaling factors
+    - scaling_factors: List of all scaling factors that were tested
+    """
     # Directory containing all the trained rate RNN model .mat files
-    model_dir = '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0'
+    # model_dir = '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0'
+    
     mat_files = [f for f in os.listdir(model_dir) if f.endswith('.mat')]
     
     # Whether to use the initial random connectivity weights
@@ -172,31 +192,22 @@ def lambda_grid_search():
     # the effects of pre-trained vs post-trained weights
     use_initial_weights = False
     
-    # Number of trials to use to evaluate the LIF RNN
-    n_trials = 100
-    
-    # Scaling factor values to try for grid search
-    # The more values it has, the longer the search
-    scaling_factors = list(range(20, 76, 5))  # [20, 25, 30, ..., 75]
-    
     # Grid search
     for i, mat_file in enumerate(mat_files):
         curr_fname = mat_file
         curr_full = os.path.join(model_dir, curr_fname)
         print(f'Analyzing {curr_fname}')
         
-        # Get the task name
-        task_name = None
-        if 'go-nogo' in curr_full:
-            task_name = 'go-nogo'
-        elif 'mante' in curr_full:
-            task_name = 'mante'
-        elif 'xor' in curr_full:
-            task_name = 'xor'
-        
         if task_name is None:
-            print(f"Unknown task type for {curr_fname}")
-            continue
+            if 'go-nogo' in curr_full:
+                task_name = 'go-nogo'
+            elif 'mante' in curr_full:
+                task_name = 'mante'
+            elif 'xor' in curr_full:
+                task_name = 'xor'
+            else:
+                print(f"Unknown task type for {curr_fname}")
+                continue
         
         # Load the model
         model_data = sio.loadmat(curr_full)

@@ -28,11 +28,10 @@ import time
 
 from .LIF_network_fnc import LIF_network_fnc
 
-def eval_go_nogo():
+def eval_go_nogo(model_path= '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0'):
     # First, load one trained rate RNN
     # Make sure lambda_grid_search.py was performed on the model.
     # Update model_path to point where the trained model is
-    model_path = '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0'
     mat_files = [f for f in os.listdir(model_path) if f.endswith('.mat')]
     model_name = mat_files[0]
     model_path = os.path.join(model_path, model_name)

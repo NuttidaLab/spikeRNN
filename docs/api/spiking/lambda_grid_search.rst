@@ -25,20 +25,24 @@ Grid Search Parameters
 
 The main grid search function accepts:
 
-* **model_path** (str, optional): Path to trained rate RNN model
-* **scaling_range** (tuple, optional): Range of scaling factors to test (default: 20-75)
-* **n_trials_per_factor** (int, optional): Number of trials per scaling factor
-* **task_type** (str, optional): Task type ('go-nogo', 'xor', 'mante')
-* **parallel** (bool, optional): Whether to use parallel processing
+* **model_dir** (str): Directory containing trained rate RNN model .mat files
+  (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0')
+* **n_trials** (int): Number of trials to evaluate each scaling factor
+  (default: 100)
+* **scaling_factors** (list): List of scaling factors to test
+  (default: [20, 25, 30, ..., 75])
+* **task_name** (str): Task type ('go-nogo', 'xor', or 'mante')
+  (default: 'go-nogo')
 
 Single Trial Evaluation
 ----------------------------------------------------
 
 The evaluate_single_trial function tests a specific scaling factor:
 
-* **model_path** (str): Path to model file
+* **curr_full** (str): Full path to model file
 * **scaling_factor** (float): Scaling factor to test
 * **trial_params** (dict): Trial parameters including stimulus and task settings
+* **task_name** (str): Name of the task to evaluate
 
 Returns performance metrics for the given scaling factor.
 
@@ -54,20 +58,20 @@ Example Usage
 
    # Grid search with custom parameters
    lambda_grid_search(
-       model_path='models/go-nogo/trained_model.mat',
-       scaling_range=(30, 80),
-       n_trials_per_factor=50,
-       task_type='go-nogo',
-       parallel=True
+       model_dir='models/go-nogo',
+       n_trials=50,
+       scaling_factors=list(range(30, 81, 5)),
+       task_name='go-nogo'
    )
 
-   # Evaluate a single scaling factor
+   # Evaluate a single trial
    from spiking.lambda_grid_search import evaluate_single_trial
    
    performance = evaluate_single_trial(
        model_path='models/go-nogo/trained_model.mat',
        scaling_factor=50.0,
-       trial_params={'stimulus': stimulus, 'task': 'go-nogo'}
+       trial_params={},
+       task_name='go-nogo'
    )
 
 Optimization Process
@@ -75,7 +79,7 @@ Optimization Process
 
 The grid search follows these steps:
 
-1. **Load trained rate model** from the specified path
+1. **Load trained rate models** from the specified directory
 2. **Generate test stimuli** appropriate for the task type
 3. **Iterate through scaling factors** in the specified range
 4. **Convert to spiking network** for each scaling factor
@@ -101,18 +105,15 @@ Different metrics are used depending on the task:
 * Context-dependent decision accuracy
 * Sensory integration performance
 
-Parallel Processing
+Output Files
 ----------------------------------------------------
 
-The module supports parallel processing using Python's multiprocessing:
+The function modifies each input .mat file to include:
 
-.. code-block:: python
+* **opt_scaling_factor**: The optimal scaling factor found
+* **all_perfs**: Performance scores for all tested scaling factors
+* **scaling_factors**: List of all scaling factors that were tested
 
-   # Enable parallel processing (default)
-   lambda_grid_search(parallel=True)
-
-   # Disable for debugging
-   lambda_grid_search(parallel=False)
 
 Output
 ----------------------------------------------------

@@ -19,12 +19,16 @@ Main Function
 Function Parameters
 -------------------
 
-The main evaluation function can be called with optional parameters:
+The main evaluation function accepts:
 
-* **model_path** (str, optional): Path to trained model file
-* **scaling_factor** (float, optional): Scaling factor for conversion
-* **n_trials** (int, optional): Number of trials to evaluate
-* **plot_results** (bool, optional): Whether to generate plots
+* **model_path** (str): Path to directory containing trained model files
+  (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0')
+
+The function will:
+1. Load the first .mat model file from the specified directory
+2. Extract the optimal scaling factor from the model
+3. Run example Go and NoGo trials
+4. Generate visualizations of network behavior
 
 Example Usage
 -------------
@@ -33,15 +37,12 @@ Example Usage
 
    from spiking import eval_go_nogo
 
-   # Evaluate with default parameters
+   # Evaluate with default model path
    eval_go_nogo()
 
-   # Evaluate specific model with custom parameters
+   # Evaluate specific model
    eval_go_nogo(
-       model_path='models/go-nogo/trained_model.mat',
-       scaling_factor=50.0,
-       n_trials=100,
-       plot_results=True
+       model_path='models/go-nogo/my_trained_models'
    )
 
 Output Metrics
@@ -49,18 +50,20 @@ Output Metrics
 
 The evaluation generates the following metrics:
 
-* **Go Trial Accuracy**: Percentage of correct responses to Go stimuli
-* **NoGo Trial Accuracy**: Percentage of correct response inhibition to NoGo stimuli
-* **Overall Accuracy**: Combined accuracy across all trials
-* **Response Time**: Average response time for Go trials
-* **Spike Count**: Total number of spikes generated during trials
+* **Network Output**: Response curves for both Go and NoGo trials
+* **Spike Patterns**: Detailed spike raster plots showing:
+  - Excitatory neuron activity (red)
+  - Inhibitory neuron activity (blue)
+* **Temporal Dynamics**: Network behavior over the full trial duration
 
 Visualization
 -------------
 
 The function generates several plots:
 
-* Spike raster plots for Go and NoGo trials
-* Network output comparison between rate and spiking models
-* Performance summary statistics
-* Response time distributions 
+* Network output comparison between Go and NoGo trials
+* Spike raster plots showing:
+  - NoGo trial neural activity
+  - Go trial neural activity
+* Color-coded neuron types (excitatory in red, inhibitory in blue)
+* Time-resolved network responses 
