@@ -93,15 +93,18 @@ Performance Metrics
 Different metrics are used depending on the task:
 
 **Go-NoGo Task:**
+
 * Response accuracy for Go trials
 * Response inhibition accuracy for NoGo trials
 * Combined accuracy score
 
 **XOR Task:**
+
 * Output accuracy for all input combinations
 * Temporal precision of responses
 
 **Mante Task:**
+
 * Context-dependent decision accuracy
 * Sensory integration performance
 

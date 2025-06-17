@@ -52,8 +52,10 @@ The evaluation generates the following metrics:
 
 * **Network Output**: Response curves for both Go and NoGo trials
 * **Spike Patterns**: Detailed spike raster plots showing:
+
   - Excitatory neuron activity (red)
   - Inhibitory neuron activity (blue)
+
 * **Temporal Dynamics**: Network behavior over the full trial duration
 
 Visualization
@@ -63,7 +65,9 @@ The function generates several plots:
 
 * Network output comparison between Go and NoGo trials
 * Spike raster plots showing:
+
   - NoGo trial neural activity
   - Go trial neural activity
+  
 * Color-coded neuron types (excitatory in red, inhibitory in blue)
 * Time-resolved network responses 

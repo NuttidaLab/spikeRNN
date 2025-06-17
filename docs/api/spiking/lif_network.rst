@@ -3,11 +3,6 @@ LIF Network Function
 
 Function for converting a trained rate RNN to a spiking RNN (leaky integrate-and-fire).
 
-The function:
-
-* Converts a trained rate RNN to a spiking RNN (leaky integrate-and-fire)
-* Uses the LIF model for the spiking RNN
-
 Main Function
 ---------------------------------------------------
 
