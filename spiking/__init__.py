@@ -52,7 +52,7 @@ from typing import Optional
 
 # Core functions
 from .LIF_network_fnc import LIF_network_fnc
-from .lambda_grid_search import lambda_grid_search, evaluate_single_trial  
+from .lambda_grid_search import lambda_grid_search, evaluate_single_trial
 from .eval_go_nogo import eval_go_nogo
 
 # Utility functions 
