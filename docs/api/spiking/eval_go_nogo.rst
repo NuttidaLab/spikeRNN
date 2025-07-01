@@ -21,7 +21,7 @@ Function Parameters
 
 The main evaluation function accepts:
 
-* **model_path** (str): Path to directory containing trained model files
+* **model_dir** (str): Path to directory containing trained model files
   (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0')
 
 The function will:
@@ -42,7 +42,7 @@ Example Usage
 
    # Evaluate specific model
    eval_go_nogo(
-       model_path='models/go-nogo/my_trained_models'
+       model_dir='models/go-nogo/my_trained_models'
    )
 
 Output Metrics
