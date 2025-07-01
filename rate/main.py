@@ -413,6 +413,8 @@ if args.mode.lower() == 'train':
     elif len(settings['taus']) == 1:
         fname = 'Task_{}_N_{}_Tau_{}_Act_{}_{}.mat'.format(args.task.lower(), N, settings['taus'][0], 
                 training_params['activation'], fname_time)
+    # Convert to float64
+    var = {k: (v.astype(np.float64) if isinstance(v, np.ndarray) else v) for k, v in var.items()}
     scipy.io.savemat(os.path.join(out_dir, fname), var)
     
     # Also save the PyTorch model

@@ -105,13 +105,6 @@ python main.py --gpu 0 --gpu_frac 0.20 \
 
 The trained PyTorch model will be saved as a `.pth` file, and the parameters will be saved as a MATLAB-formatted file (`.mat`) in the output directory.
 
-The name of the output files conform to the following convention:
-
-```
-Task_<Task Name>_N_<N>_Taus_<min_tau>_<max_tau>_Act_<act>_<YYYY_MM_DD_TIME>.mat
-Task_<Task Name>_N_<N>_Taus_<min_tau>_<max_tau>_Act_<act>_<YYYY_MM_DD_TIME>.pth
-```
-
 ## API Reference
 
 ### Core Classes
