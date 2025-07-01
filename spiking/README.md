@@ -74,10 +74,9 @@ from spiking import lambda_grid_search
 # Find optimal scaling factor for your model
 lambda_grid_search(
     model_path='models/go-nogo/model.mat',
+    n_trials=50,
     scaling_range=(20, 80),
-    n_trials_per_factor=50,
-    task_type='go-nogo',
-    parallel=True
+    task_name='go-nogo'
 )
 ```
 
@@ -87,12 +86,7 @@ lambda_grid_search(
 from spiking import eval_go_nogo
 
 # Evaluate spiking network performance
-eval_go_nogo(
-    model_path='models/go-nogo/model.mat',
-    scaling_factor=50.0,
-    n_trials=100,
-    plot_results=True
-)
+eval_go_nogo(model_path='models/go-nogo/model.mat')
 ```
 
 ## Core Functions
@@ -295,23 +289,25 @@ Context-dependent sensory integration:
 
 ## Integration with Rate Package
 
-Complete workflow example:
+#### Complete workflow example:
+
+Step 1: Train a rate RNN model (from rate package)
+
+Step 2: Optimize the scaling factor
+
+Run the following script from the spikeRNN directory:
+
+```bash
+python -m spiking.lambda_grid_search \
+        --model_dir "models/go-nogo/P_rec_0.2_Taus_4.0_20.0" \
+        --n_trials 50 \
+        --scaling_factors 20:76:5 \
+        --task_name go-nogo
+```
+
+# Step 3: Convert and simulate
 
 ```python
-# Step 1: Train rate RNN (rate package)
-import torch
-from rate import FR_RNN_dale, set_gpu
-
-device = set_gpu('0', 0.3)
-# ... train rate model and save as .mat file ...
-
-# Step 2: Convert to spiking network (spiking package)  
-from spiking import LIF_network_fnc, lambda_grid_search
-
-# Optimize scaling factor
-lambda_grid_search(model_path='path/to/trained/model.mat')
-
-# Convert and simulate
 W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(
     'path/to/trained/model.mat', scaling_factor=50.0, u=stimulus, 
     stims={'mode': 'none'}, downsample=1, use_initial_weights=False

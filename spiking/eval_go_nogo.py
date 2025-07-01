@@ -25,20 +25,36 @@ import matplotlib.pyplot as plt
 import scipy.io as sio
 import os
 import time
+import argparse
 
 from .LIF_network_fnc import LIF_network_fnc
+import warnings
+warnings.filterwarnings("ignore")
 
-def eval_go_nogo(model_path= '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0'):
+# This makes file paths robust to where the script is executed from.
+_PROJ_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_DEFAULT_MODEL_DIR = os.path.join(_PROJ_ROOT, 'models', 'go-nogo', 'P_rec_0.2_Taus_4.0_20.0')
+
+def eval_go_nogo(model_dir=_DEFAULT_MODEL_DIR):
     # First, load one trained rate RNN
     # Make sure lambda_grid_search.py was performed on the model.
-    # Update model_path to point where the trained model is
-    mat_files = [f for f in os.listdir(model_path) if f.endswith('.mat')]
+   
+    mat_files = [f for f in os.listdir(model_dir) if f.endswith('.mat')]
     model_name = mat_files[0]
-    model_path = os.path.join(model_path, model_name)
+    model_path = os.path.join(model_dir, model_name)
+    print(f"Using model file: {model_path}")
+
+    # Create a directory for saving plots
+    plot_dir = os.path.join(model_dir, 'plots')
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
+    print(f"Plots will be saved to: {plot_dir}")
     
     # Load model data to get opt_scaling_factor
     model_data = sio.loadmat(model_path)
-    opt_scaling_factor = model_data['opt_scaling_factor'].item()
+    opt_scaling_factor = float(model_data['opt_scaling_factor'].item())
+
+    print(f"Optimal scaling factor: {opt_scaling_factor}")
     
     use_initial_weights = False
     scaling_factor = opt_scaling_factor
@@ -55,91 +71,106 @@ def eval_go_nogo(model_path= '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0'):
                                                            u, stims, down_sample, use_initial_weights)
     dt = params['dt']
     T = params['T']
-    t = np.arange(dt, T + dt, dt)
+    nt = params['nt']
+        
+    t = np.arange(dt, dt*(nt+1), dt)[:nt]
 
-    nogo_out = out   # LIF network output
+    nogo_out = out.flatten()   # LIF network output
     nogo_rs = rs     # firing rates
     nogo_spk = spk   # spikes
 
     # --------------------------------------------------------------
     # Go trial example
     # --------------------------------------------------------------
-    u = np.zeros((1, 201))  # input stim
-    u[0, 30:50] = 1  # Note: Python uses 0-based indexing, MATLAB uses 1-based
-
+    u = np.zeros((1, 201))
+    u[0, 30:50] = 1  # Corrected to match MATLAB's u(31:50)
+    
     # Run the LIF simulation 
     stims = {'mode': 'none'}
     W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(model_path, scaling_factor,
                                                            u, stims, down_sample, use_initial_weights)
     dt = params['dt']
     T = params['T']
-    t = np.arange(dt, T + dt, dt)
+    nt = params['nt']
+    
+    t = np.arange(dt, dt*(nt+1), dt)[:nt]
 
-    go_out = out   # LIF network output
+    go_out = out.flatten()   # LIF network output
     go_rs = rs     # firing rates
     go_spk = spk   # spikes
 
     # Load additional model data for plotting
-    model_data = sio.loadmat(model_path)
     inh = model_data['inh'].flatten()
     exc = model_data['exc'].flatten()
-    N = int(model_data['N'].item())
+    N = int(np.array(model_data['N']).squeeze())
+    # Replicate MATLAB's plotting order: excitatory then inhibitory neurons
+    exc_ind = np.where(exc == 1)[0]
+    inh_ind = np.where(inh == 1)[0]
+    all_ind = np.concatenate((exc_ind, inh_ind))
 
-    # --------------------------------------------------------------
-    # Plot the network output
-    # --------------------------------------------------------------
-    plt.figure()
-    plt.plot(t, nogo_out.flatten(), 'm', linewidth=2, label='NoGo')
-    plt.plot(t, go_out.flatten(), 'g', linewidth=2, label='Go')
+    # ----------- Output Plot -----------
+    plt.figure(figsize=(10, 6))
+    plt.plot(t, nogo_out, 'm', linewidth=2, label='NoGo')
+    plt.plot(t, go_out, 'g', linewidth=2, label='Go')
     plt.xlabel('Time (s)')
     plt.ylabel('Network Output')
     plt.legend()
     plt.title('Network Output Comparison')
     plt.tight_layout()
-    plt.show()
+    output_filename = os.path.join(plot_dir, "network_output.png")
+    plt.savefig(output_filename)
+    plt.close()
+    print(f"Saved network output plot: {output_filename}")
 
-    # --------------------------------------------------------------
-    # Plot the spike raster
-    # --------------------------------------------------------------
-    # NoGo spike raster
+    # ----------- NoGo spike raster -----------
     plt.figure(figsize=(8, 6))
-    inh_ind = np.where(inh == 1)[0]
-    exc_ind = np.where(exc == 1)[0]
-    all_ind = np.arange(N)
-    
-    for i in range(len(all_ind)):
-        curr_spk = nogo_spk[all_ind[i], 10:]  # Skip first 10 time steps
-        spike_times = t[10:][curr_spk > 0]  # Get corresponding time points
-        if exc[all_ind[i]] == 1:
-            plt.plot(spike_times, np.ones(len(spike_times)) * i, 'r.', markersize=8)
-        else:
-            plt.plot(spike_times, np.ones(len(spike_times)) * i, 'b.', markersize=8)
-    
+    for plot_idx, neuron_idx in enumerate(all_ind):
+        curr_spk = nogo_spk[neuron_idx, 9:]  # Python 0-based index 9 == 10th timepoint in MATLAB
+        spike_indices = np.where(curr_spk > 0)[0]
+        if len(spike_indices) > 0:
+            spike_times = t[9:][spike_indices]
+            color = 'r.' if exc[neuron_idx] == 1 else 'b.'
+            plt.plot(spike_times, np.ones(len(spike_times)) * plot_idx, color, markersize=8)
     plt.xlim([0, 1])
-    plt.ylim([-5, 205])
-    plt.xlabel('Time (s)')
+    plt.ylim([-5, N+5])
+    plt.xlabel('Steps')
     plt.ylabel('Neuron Index')
-    plt.title('NoGo Spike Raster (Red: Excitatory, Blue: Inhibitory)')
+    plt.title('NoGo Spike Raster (Red: Exc, Blue: Inh)')
     plt.tight_layout()
-    plt.show()
+    nogo_raster_filename = os.path.join(plot_dir, "nogo_spike_raster.png")
+    plt.savefig(nogo_raster_filename)
+    plt.close()
+    print(f"Saved NoGo spike raster: {nogo_raster_filename}")
 
-    # Go spike raster
+    # ----------- Go spike raster -----------
     plt.figure(figsize=(8, 6))
-    for i in range(len(all_ind)):
-        curr_spk = go_spk[all_ind[i], 10:]  # Skip first 10 time steps
-        spike_times = t[10:][curr_spk > 0]  # Get corresponding time points
-        if exc[all_ind[i]] == 1:
-            plt.plot(spike_times, np.ones(len(spike_times)) * i, 'r.', markersize=8)
-        else:
-            plt.plot(spike_times, np.ones(len(spike_times)) * i, 'b.', markersize=8)
-    
+    for plot_idx, neuron_idx in enumerate(all_ind):
+        curr_spk = go_spk[neuron_idx, 9:]
+        spike_indices = np.where(curr_spk > 0)[0]
+        if len(spike_indices) > 0:
+            spike_times = t[9:][spike_indices]
+            color = 'r.' if exc[neuron_idx] == 1 else 'b.'
+            plt.plot(spike_times, np.ones(len(spike_times)) * plot_idx, color, markersize=8)
     plt.xlim([0, 1])
-    plt.ylim([-5, 205])
-    plt.xlabel('Time (s)')
+    plt.ylim([-5, N+5])
+    plt.xlabel('Steps')
     plt.ylabel('Neuron Index')
-    plt.title('Go Spike Raster (Red: Excitatory, Blue: Inhibitory)')
+    plt.title('Go Spike Raster (Red: Exc, Blue: Inh)')
     plt.tight_layout()
-    plt.show()
+    go_raster_filename = os.path.join(plot_dir, "go_spike_raster.png")
+    plt.savefig(go_raster_filename)
+    plt.close()
+    print(f"Saved Go spike raster: {go_raster_filename}")
+    print("--- Evaluation complete ---")
 
 if __name__ == "__main__":
-    eval_go_nogo() 
+    
+    parser = argparse.ArgumentParser(description='Evaluate a trained LIF RNN model constructed to perform the Go-NoGo task.')
+    parser.add_argument('--model_dir', type=str, default=_DEFAULT_MODEL_DIR,
+                      help='Directory containing the trained rate RNN model .mat files')
+    args = parser.parse_args()
+    
+    eval_go_nogo(model_dir=args.model_dir) 
+    
+    # Example command from the spikeRNN directory:
+    # python -m spiking.eval_go_nogo --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0
