@@ -11,28 +11,21 @@ warnings.filterwarnings("ignore")
 
 def _init_worker():
     """Initialize each worker process with a fresh random seed and clear any GPU state"""
-    # Set process-specific random seed
-    import os
-    import numpy as np
+
     np.random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
     
     # Force CPU computation for worker processes
     os.environ['CUDA_VISIBLE_DEVICES'] = ''
     
-    # Only reload our custom modules
     import sys
     import importlib
     custom_modules = ['spiking.LIF_network_fnc', 'spiking.utils']
     for module in custom_modules:
         if module in sys.modules:
             importlib.reload(sys.modules[module])
-    
-    # Set fresh random seed
-    import numpy as np
+        
     np.random.seed()
     
-    # Clear any existing PyTorch state
-    import torch
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
@@ -41,13 +34,9 @@ def _init_worker():
 def evaluate_single_trial(args):
     curr_full, scaling_factor, task_name, use_initial_weights, down_sample = args
     
-    # Import dependencies
-    import numpy as np
-    import scipy.io as sio
     from spiking.LIF_network_fnc import LIF_network_fnc
     
     model_data = sio.loadmat(curr_full)
-    
 
     try:
         if task_name == 'go-nogo':
@@ -199,7 +188,7 @@ if __name__ == "__main__":
     """
     python -m spiking.lambda_grid_search \
         --model_dir "models/go-nogo/P_rec_0.2_Taus_4.0_20.0" \
+        --task_name go-nogo \
         --n_trials 100 \
-        --scaling_factors 20:76:5 \
-        --task_name go-nogo
+        --scaling_factors 20:76:5
     """

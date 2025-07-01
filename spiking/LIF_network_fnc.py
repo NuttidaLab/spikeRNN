@@ -79,7 +79,6 @@ def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_ini
     som_m = model_data['som_m']
     w_out = model_data['w_out']
     
-    # Enforce correct shapes for weight vectors to avoid issues with scipy.io.loadmat
     w_in = w_in.reshape(N, 1)
     w_out = w_out.reshape(1, N)
 
@@ -89,10 +88,8 @@ def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_ini
     taus_gaus = model_data['taus_gaus']
     taus = model_data['taus']
 
-    # Convert to torch tensors
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    # Shuffle nonzero weights
     if use_initial_weights:
         w = np.matmul(w0, m) * som_m
     else:

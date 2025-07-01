@@ -74,21 +74,21 @@ net = FR_RNN_dale(200, 0.2, 0.2, w_in, som_N=0, w_dist='gaus',
 ### Converting to Spiking Networks
 
 ```python
-from spiking import LIF_network_fnc, lambda_grid_search, eval_go_nogo
+from spiking.LIF_network_fnc import LIF_network_fnc
+from spiking.lambda_grid_search import lambda_grid_search
+from spiking.eval_go_nogo import eval_go_nogo
 
 # Optimize scaling factor
 lambda_grid_search(
-    model_path='models/go-nogo/trained_model.mat',
-    scaling_range=(20, 80),
-    task_type='go-nogo',
-    parallel=True
+    model_dir='models/go-nogo',
+    task_name='go-nogo'
+    n_trials=100,
+    scaling_factors=list(np.arange(25, 76, 5))
 )
 
 # Evaluate performance
 eval_go_nogo(
-    model_path='models/go-nogo/trained_model.mat',
-    scaling_factor=50.0,
-    plot_results=True
+    model_path='models/go-nogo/trained_model.mat'
 )
 ```
 

@@ -18,25 +18,12 @@ This package provides leaky integrate-and-fire (LIF) spiking neural networks con
 pip install spiking
 ```
 
-### From Source
+or install together with the `rate` package (recommended)
 
 ```bash
 git clone https://github.com/NuttidaLab/spikeRNN.git
 cd spikeRNN/spiking
 pip install -e .
-```
-
-### With Rate Package
-
-For the complete framework:
-
-```bash
-git clone https://github.com/NuttidaLab/spikeRNN.git
-cd spikeRNN
-
-# Install both packages
-cd rate && pip install -e . && cd ..
-cd spiking && pip install -e . && cd ..
 ```
 
 ## Quick Start

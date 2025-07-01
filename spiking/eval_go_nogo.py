@@ -31,11 +31,10 @@ from .LIF_network_fnc import LIF_network_fnc
 import warnings
 warnings.filterwarnings("ignore")
 
-# This makes file paths robust to where the script is executed from.
 _PROJ_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _DEFAULT_MODEL_DIR = os.path.join(_PROJ_ROOT, 'models', 'go-nogo', 'P_rec_0.2_Taus_4.0_20.0')
 
-def eval_go_nogo(model_dir=_DEFAULT_MODEL_DIR):
+def eval_go_nogo(model_dir=_DEFAULT_MODEL_DIR, optimal_scaling_factor=None):
     # First, load one trained rate RNN
     # Make sure lambda_grid_search.py was performed on the model.
    
@@ -52,7 +51,10 @@ def eval_go_nogo(model_dir=_DEFAULT_MODEL_DIR):
     
     # Load model data to get opt_scaling_factor
     model_data = sio.loadmat(model_path)
-    opt_scaling_factor = float(model_data['opt_scaling_factor'].item())
+    if optimal_scaling_factor is None:
+        opt_scaling_factor = float(model_data['opt_scaling_factor'].item())
+    else:
+        opt_scaling_factor = optimal_scaling_factor
 
     print(f"Optimal scaling factor: {opt_scaling_factor}")
     
@@ -83,7 +85,7 @@ def eval_go_nogo(model_dir=_DEFAULT_MODEL_DIR):
     # Go trial example
     # --------------------------------------------------------------
     u = np.zeros((1, 201))
-    u[0, 30:50] = 1  # Corrected to match MATLAB's u(31:50)
+    u[0, 30:50] = 1 
     
     # Run the LIF simulation 
     stims = {'mode': 'none'}
@@ -103,7 +105,7 @@ def eval_go_nogo(model_dir=_DEFAULT_MODEL_DIR):
     inh = model_data['inh'].flatten()
     exc = model_data['exc'].flatten()
     N = int(np.array(model_data['N']).squeeze())
-    # Replicate MATLAB's plotting order: excitatory then inhibitory neurons
+
     exc_ind = np.where(exc == 1)[0]
     inh_ind = np.where(inh == 1)[0]
     all_ind = np.concatenate((exc_ind, inh_ind))
@@ -172,5 +174,15 @@ if __name__ == "__main__":
     
     eval_go_nogo(model_dir=args.model_dir) 
     
-    # Example command from the spikeRNN directory:
-    # python -m spiking.eval_go_nogo --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0
+    # Run the following command from the spikeRNN directory:
+    """
+    python -m spiking.eval_go_nogo \
+        --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0
+    """
+    
+    # If you want to use a different scaling factor, run the following command:
+    """
+    python -m spiking.eval_go_nogo \
+        --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0 \
+        --optimal_scaling_factor 50.0
+    """

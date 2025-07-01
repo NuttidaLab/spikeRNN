@@ -13,13 +13,10 @@ This package provides continuous-variable rate recurrent neural network (RNN) mo
 
 ## Installation
 
-### Installation
-
 ```bash
 pip install rate
 ```
-
-### From Source
+or install together with the `spiking` package (recommended)
 
 ```bash
 git clone https://github.com/NuttidaLab/spikeRNN.git
