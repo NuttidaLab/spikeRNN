@@ -1,7 +1,8 @@
 Examples
 ========
 
-This section provides detailed examples of using the complete SpikeRNN framework for training rate RNNs and converting them to spiking networks.
+This section provides detailed examples of using the complete spikeRNN framework for training rate RNNs and converting them to spiking networks. 
+The examples below can be run interactively in a Python environment or adapted into standalone scripts.
 
 Complete Workflow Example
 ----------------------------------------
@@ -20,7 +21,7 @@ This example shows the complete workflow from training a rate RNN to converting 
     device = set_gpu('0', 0.3)
     config = create_default_config(N=200, P_inh=0.2, P_rec=0.2)
 
-    # Step 2: Train rate RNN (simplified example)
+    # Step 2: Train rate RNN
     # ... training code ...
 
     # Step 3: Save trained model
@@ -186,7 +187,19 @@ Convert a trained rate RNN to a spiking network:
 Scaling Factor Optimization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Finding the optimal scaling factor is crucial for good performance:
+Finding the optimal scaling factor is crucial for good performance.
+You can run the grid search from the command line:
+
+.. code-block:: bash
+
+    python -m spiking.lambda_grid_search \
+        --model_dir "models/go-nogo/P_rec_0.2_Taus_4.0_20.0" \
+        --task_name go-nogo \
+        --n_trials 100 \
+        --scaling_factors 20:76:5
+
+
+Or call the function from within a Python script:
 
 .. code-block:: python
 
@@ -194,17 +207,33 @@ Finding the optimal scaling factor is crucial for good performance:
     
     # Comprehensive grid search
     lambda_grid_search(
-        model_path='models/go-nogo/trained_model.mat',
-        scaling_range=(20, 100),
-        n_trials_per_factor=100,
-        task_type='go-nogo',
-        parallel=True
+        model_dir='models/go-nogo/P_rec_0.2_Taus_4.0_20.0',
+        task_name='go-nogo',
+        n_trials=100,
+        scaling_factors=(20, 76, 5)
     )
 
 Task Performance Evaluation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Evaluate converted spiking networks:
+You can also evaluate converted spiking networks directly from the command line. 
+For example, to evaluate the Go-NoGo task for a specific model, run the following command from the spikeRNN directory:
+
+.. code-block:: bash
+
+    python -m spiking.eval_go_nogo \
+        --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0
+
+If you have a specific scaling factor you want to use, you can specify it:
+
+.. code-block:: bash
+
+    python -m spiking.eval_go_nogo \
+        --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0 \
+        --optimal_scaling_factor 50.0
+
+
+Alternatively, you can call the evaluation function from a Python script:
 
 .. code-block:: python
 
@@ -212,124 +241,13 @@ Evaluate converted spiking networks:
     
     # Evaluate Go-NoGo performance
     eval_go_nogo(
-        model_path='models/go-nogo/trained_model.mat',
-        scaling_factor=50.0,
-        n_trials=200,
-        plot_results=True
+        model_dir='models/go-nogo/P_rec_0.2_Taus_4.0_20.0'
     )
 
-Batch Processing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you have a specific scaling factor you want to use, you can specify it:
 
-Process multiple models:
+.. code-block:: bash
 
-.. code-block:: python
-
-    import os
-    from spiking import LIF_network_fnc, lambda_grid_search
-    
-    # Process all .mat models in directory
-    model_dir = 'models/'
-    model_paths = [
-        'models/go-nogo/trained_model.mat',
-        'models/xor/trained_model.mat',
-        'models/mante/trained_model.mat'
-    ]
-    
-    results = {}
-    for model_path in model_paths:
-        if os.path.exists(model_path):
-            # Find optimal scaling
-            lambda_grid_search(model_path=model_path, task_type='go-nogo')
-            
-            # Convert and analyze
-            W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(
-                model_path, 50.0, stimulus, {'mode': 'none'}, 1, False
-            )
-            results[model_path] = {
-                'spikes': np.sum(spk),
-                'output': out[-1]
-            }
-
-Advanced Analysis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-    from spiking import format_spike_data
-    import matplotlib.pyplot as plt
-    
-    # Load and convert model
-    model_path = 'models/go-nogo/trained_model.mat'
-
-    # Format spike data for analysis
-    spike_data = format_spike_data(spk, params['dt'])
-
-    # Print statistics
-    print(f"Total spikes: {spike_data['total_spikes']}")
-    print(f"Number of active neurons: {len(spike_data['active_neurons'])}")
-    print(f"Mean firing rate: {np.mean(spike_data['firing_rates']):.2f} Hz")
-    print(f"Spike rate: {spike_data['total_spikes'] / params['total_time']:.2f} spikes/s")
-
-    # Plot firing rate distribution
-    plt.figure(figsize=(8, 5))
-    plt.hist(spike_data['firing_rates'], bins=30, alpha=0.7)
-    plt.xlabel('Firing Rate (Hz)')
-    plt.ylabel('Number of Neurons')
-    plt.title('Firing Rate Distribution')
-    plt.show()
-
-Advanced Examples
-----------------------------------------
-
-Multi-Task Comparison
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Compare spiking network performance across different tasks:
-
-.. code-block:: python
-
-    tasks = ['go-nogo', 'xor', 'mante']
-    model_paths = [
-        'models/go-nogo/trained_model.mat',
-        'models/xor/trained_model.mat', 
-        'models/mante/trained_model.mat'
-    ]
-
-    for task, model_path in zip(tasks, model_paths):
-        print(f"\nEvaluating {task} task...")
-        
-        # Optimize scaling factor
-        lambda_grid_search(
-            model_path=model_path,
-            task_type=task,
-            parallel=True
-        )
-        
-        # Evaluate performance
-        if task == 'go-nogo':
-            eval_go_nogo(model_path=model_path, plot_results=True)
-
-Parameter Sensitivity Analysis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Test how different LIF parameters affect conversion:
-
-.. code-block:: python
-
-    from spiking.utils import generate_lif_params
-
-    model_path = 'models/go-nogo/trained_model.mat'
-    scaling_factor = 50.0
-    u = np.zeros((1, 201))
-    u[0, 30:50] = 1
-
-    # Test different time constants
-    time_constants = [0.01, 0.02, 0.05, 0.1]
-    
-    for tm in time_constants:
-        print(f"\nTesting membrane time constant: {tm}s")
-        
-        # This would require modifying LIF_network_fnc to accept custom parameters
-        # or creating a custom implementation
-        # Results would show how membrane dynamics affect spike timing 
+    python -m spiking.eval_go_nogo \
+        --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0 \
+        --optimal_scaling_factor 50.0
