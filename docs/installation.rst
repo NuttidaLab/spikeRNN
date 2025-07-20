@@ -1,7 +1,7 @@
 Installation
 ============
 
-SpikeRNN consists of two complementary packages: :doc:`api/rate/index` and :doc:`api/spiking/index`.
+spikeRNN consists of two complementary packages: :doc:`api/rate/index` and :doc:`api/spiking/index`.
 
 Requirements
 ----------------------------------------------------------------------
@@ -12,10 +12,10 @@ Requirements
 * SciPy >= 1.3.1
 * Matplotlib >= 3.0.0
 
-Installing SpikeRNN
+Installing spikeRNN
 ----------------------------------------------------------------------
 
-To install the complete SpikeRNN framework with both rate and spiking packages:
+To install the complete spikeRNN framework with both rate and spiking packages:
 
 .. code-block:: bash
 
@@ -80,26 +80,7 @@ This will install:
 * joblib >= 1.0
 * multiprocess >= 0.70
 
-Verification
-----------------------------------------------------------------------
-
-To verify your installation, you can run:
-
-.. code-block:: python
-
-   import spikeRNN
-   spikeRNN.check_packages()
-
-This will show which packages are available:
-
-.. code-block:: text
-
-   SpikeRNN Package Status:
-   ==============================
-        rate: ✓ Available
-     spiking: ✓ Available
-
 GPU Support
 ----------------------------------------------------------------------
 
-Both packages support GPU acceleration through PyTorch's CUDA integration. No additional installation is required if you have a CUDA-compatible PyTorch installation. 
+Both packages support GPU acceleration through PyTorch's CUDA integration. No additional installation is required if you have a CUDA-compatible PyTorch installation.

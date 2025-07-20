@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Setup script for the SpikeRNN package - Unified Rate and Spiking Neural Networks
+Setup script for the spikeRNN package - Unified Rate and Spiking Neural Networks
 
 This setup script allows both the rate and spiking packages to be installed together
 as a unified Python package, enabling users to import both modules after a single install.

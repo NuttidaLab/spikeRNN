@@ -1,7 +1,7 @@
-Contributing to SpikeRNN
+Contributing to spikeRNN
 ================================================
 
-We welcome contributions to the SpikeRNN framework! This document provides guidelines for contributing code, documentation, and bug reports.
+We welcome contributions to the spikeRNN framework! This document provides guidelines for contributing code, documentation, and bug reports.
 
 Development Setup
 ---------------------------------------------------
@@ -30,7 +30,7 @@ Development Setup
 Package Structure
 ---------------------------------------------------
 
-The SpikeRNN framework consists of two main packages:
+The spikeRNN framework consists of two main packages:
 
 * **rate/**: Rate-based RNN implementation
 * **spiking/**: Spiking neural network conversion
@@ -244,4 +244,4 @@ Contact
 * **Discussions**: Use GitHub discussions for questions
 * **Email**: Contact maintainers for security issues
 
-Thank you for contributing to SpikeRNN! 
+Thank you for contributing to spikeRNN! 
