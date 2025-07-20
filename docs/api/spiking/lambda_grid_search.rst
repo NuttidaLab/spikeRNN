@@ -2,8 +2,7 @@ Scaling Factor Grid Search
 ====================================================
 
 Functions for optimizing the scaling factor (lambda) used in rate-to-spike conversion. 
-The scaling factor is crucial for maintaining task performance 
-when converting from continuous rate dynamics to discrete spiking dynamics.
+The scaling factor is crucial for maintaining task performance when converting from continuous rate dynamics to discrete spiking dynamics.
 
 Main Functions
 ----------------------------------------------------

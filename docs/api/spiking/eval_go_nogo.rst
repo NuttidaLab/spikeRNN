@@ -2,14 +2,16 @@ Go-NoGo Evaluation
 ==================
 Functions for evaluating a trained LIF RNN model constructed to perform the Go-NoGo task.
 
-This task requires the network to respond to “Go” stimuli and withhold responses to “NoGo” stimuli, testing impulse control and decision-making capabilities.
+.. note::
 
-The evaluation includes:
+  This task requires the network to respond to “Go” stimuli and withhold responses to “NoGo” stimuli, testing impulse control and decision-making capabilities.
 
-* Performance comparison between rate and spiking networks
-* Spike raster plot visualization
-* Response time analysis
-* Accuracy metrics for Go and NoGo trials
+  The evaluation includes:
+
+  * Performance comparison between rate and spiking networks
+  * Spike raster plot visualization
+  * Response time analysis
+  * Accuracy metrics for Go and NoGo trials
 
 Main Function
 -------------

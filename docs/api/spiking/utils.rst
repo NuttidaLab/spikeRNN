@@ -3,9 +3,12 @@ Utilities
 
 Utility functions for spiking neural networks.
 
-This module provides utility functions for loading rate models,
-generating connectivity parameters, and validating inputs for 
-spiking neural network simulations.
+.. note::
+
+   This module provides utility functions for loading rate models,
+   generating connectivity parameters, and validating inputs for 
+   spiking neural network simulations.
+
 
 Model Loading
 ----------------------------------------------------
@@ -14,11 +17,7 @@ Model Loading
 
    Load a trained rate RNN model from MATLAB `.mat` file.
    
-   Only `.mat` files are supported as they contain all necessary parameters for
-   accurate rate-to-spike conversion, including connectivity masks, neuron types,
-   and time constants.
-
-   :param str model_path: Path to the .mat model file
+   :param str model_path: Path to the `.mat` model file
    :returns: Dictionary containing model parameters
    :rtype: dict
    :raises FileNotFoundError: If model file doesn't exist
@@ -59,7 +58,7 @@ Example Usage
    from spiking.utils import load_rate_model
 
    # Load .mat model file
-   model_data = load_rate_model('trained_model.mat')
+   model_data = load_rate_model('models/go-nogo/trained_model.mat')
 
 **Creating Network Connectivity:**
 
@@ -124,21 +123,3 @@ Example Usage
 
    # Set random seed for reproducibility
    set_random_seed(42)
-
-Function Details
-----------------------------------------------------
-
-**load_rate_model(model_path)**
-    Load a trained rate RNN model from MATLAB `.mat` file.
-
-**create_connectivity_masks(N, P_inh, som_N, apply_dale, seed)**
-    Generate connectivity masks for inhibitory/excitatory neurons and SOM types.
-
-**generate_lif_params(dt, downsample)**
-    Create default LIF neuron parameters with customizable time constants.
-
-**validate_stimulus(u, task_type)**
-    Ensure input stimulus matches requirements for specific cognitive tasks.
-
-**format_spike_data(spikes, dt)**
-    Convert binary spike matrix to analysis-ready format with timing information.
