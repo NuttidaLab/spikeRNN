@@ -22,11 +22,12 @@ Function Parameters
 The main evaluation function accepts:
 
 * **model_dir** (str): Path to directory containing trained model files
-  (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0')
+  * (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0')
 * **optimal_scaling_factor** (float): Optimal scaling factor to use for the spiking conversion.
-  If not provided, the function will load the optimal scaling factor from the model file.
+  * If not provided, the function will load the optimal scaling factor from the model file.
 
 The function will:
+
 1. Load the first `.mat` model file from the specified directory
 2. Extract the optimal scaling factor from the model file (if not specified)
 3. Run example Go and NoGo trials
