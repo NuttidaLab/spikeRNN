@@ -16,7 +16,7 @@ Module Overview
 ---------------
 
 **model.py**
-    Contains the main FR_RNN_dale class and task-specific functions for creating stimuli and targets.
+    Contains the main `FR_RNN_dale` class and task-specific functions for creating stimuli and targets.
 
 **utils.py**
     Utility functions for GPU management, training helpers, and network configuration.
