@@ -32,7 +32,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def eval_go_nogo(model_dir='models/go-nogo/P_rec_0.2_Taus_4.0_20.0', optimal_scaling_factor=None):
+def eval_go_nogo(model_dir='../models/go-nogo/P_rec_0.2_Taus_4.0_20.0', optimal_scaling_factor=None):
     # First, load one trained rate RNN
     # Make sure lambda_grid_search.py was performed on the model.
    
