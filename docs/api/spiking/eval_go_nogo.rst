@@ -23,10 +23,12 @@ The main evaluation function accepts:
 
 * **model_dir** (str): Path to directory containing trained model files
   (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0')
+* **optimal_scaling_factor** (float): Optimal scaling factor to use for the spiking conversion.
+  If not provided, the function will load the optimal scaling factor from the model file.
 
 The function will:
-1. Load the first .mat model file from the specified directory
-2. Extract the optimal scaling factor from the model
+1. Load the first `.mat` model file from the specified directory
+2. Extract the optimal scaling factor from the model file (if not specified)
 3. Run example Go and NoGo trials
 4. Generate visualizations of network behavior
 
@@ -43,6 +45,12 @@ Example Usage
    # Evaluate specific model
    eval_go_nogo(
        model_dir='models/go-nogo/my_trained_models'
+   )
+
+   # Evaluate with specific scaling factor
+   eval_go_nogo(
+       model_dir='models/go-nogo/my_trained_models',
+       optimal_scaling_factor=50.0
    )
 
 Output Metrics
