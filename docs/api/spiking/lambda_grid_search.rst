@@ -5,14 +5,6 @@ Functions for optimizing the scaling factor (lambda) used in rate-to-spike conve
 The scaling factor is crucial for maintaining task performance 
 when converting from continuous rate dynamics to discrete spiking dynamics.
 
-The optimization process:
-
-* Tests multiple scaling factors across a predefined range
-* Evaluates spiking network performance for each scaling factor
-* Uses parallel processing for efficient computation
-* Saves the optimal scaling factor to the model file
-* Supports all cognitive tasks (Go-NoGo, XOR, Mante)
-
 Main Functions
 ----------------------------------------------------
 
@@ -25,24 +17,25 @@ Grid Search Parameters
 
 The main grid search function accepts:
 
-* **model_dir** (str): Directory containing trained rate RNN model .mat files
+* `model_dir` (str): Directory containing trained rate RNN model .mat files
   (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0')
-* **n_trials** (int): Number of trials to evaluate each scaling factor
-  (default: 100)
-* **scaling_factors** (list): List of scaling factors to test
-  (default: [20, 25, 30, ..., 75])
-* **task_name** (str): Task type ('go-nogo', 'xor', or 'mante')
+* `task_name` (str): Task type ('go-nogo', 'xor', or 'mante')
   (default: 'go-nogo')
+* `n_trials` (int): Number of trials to evaluate each scaling factor
+  (default: 100)
+* `scaling_factors` (list): List of scaling factors to test
+  (default: [20, 25, 30, ..., 75])
 
 Single Trial Evaluation
 ----------------------------------------------------
 
 The evaluate_single_trial function tests a specific scaling factor:
 
-* **curr_full** (str): Full path to model file
-* **scaling_factor** (float): Scaling factor to test
-* **trial_params** (dict): Trial parameters including stimulus and task settings
-* **task_name** (str): Name of the task to evaluate
+* `curr_full` (str): Full path to model file
+* `scaling_factor` (float): Scaling factor to test
+* `task_name` (str): Name of the task to evaluate
+* `use_initial_weights` (bool): Whether to use initial weights instead of trained weights
+* `down_sample` (int): Temporal downsampling factor
 
 Returns performance metrics for the given scaling factor.
 
@@ -61,16 +54,6 @@ Example Usage
        model_dir='models/go-nogo',
        n_trials=50,
        scaling_factors=list(range(30, 81, 5)),
-       task_name='go-nogo'
-   )
-
-   # Evaluate a single trial
-   from spiking.lambda_grid_search import evaluate_single_trial
-   
-   performance = evaluate_single_trial(
-       model_path='models/go-nogo/trained_model.mat',
-       scaling_factor=50.0,
-       trial_params={},
        task_name='go-nogo'
    )
 
@@ -111,11 +94,11 @@ Different metrics are used depending on the task:
 Output Files
 ----------------------------------------------------
 
-The function modifies each input .mat file to include:
+The function modifies each input `.mat` file to include:
 
-* **opt_scaling_factor**: The optimal scaling factor found
-* **all_perfs**: Performance scores for all tested scaling factors
-* **scaling_factors**: List of all scaling factors that were tested
+* `opt_scaling_factor`: The optimal scaling factor found
+* `all_perfs`: Performance scores for all tested scaling factors
+* `scaling_factors`: List of all scaling factors that were tested
 
 
 Output
