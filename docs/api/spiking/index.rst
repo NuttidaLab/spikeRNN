@@ -8,7 +8,7 @@ Core Modules
 ------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    lif_network
    eval_go_nogo
@@ -46,5 +46,5 @@ Quick Reference
 
 **Utility Functions:**
 
-* ``load_rate_model()``: Load PyTorch rate models
+* ``load_rate_model()``: Load rate model from `.mat` file
 * ``format_spike_data()``: Format spike data for analysis
