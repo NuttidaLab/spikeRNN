@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
-project = 'SpikeRNN'
+project = 'spikeRNN'
 copyright = '2025, NuttidaLab'
 author = 'NuttidaLab'
 
@@ -46,7 +46,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
 html_css_files = ['custom.css']
-html_title = "SpikeRNN"
+html_title = "spikeRNN"
 
 # Napoleon settings
 napoleon_google_docstring = True
@@ -67,7 +67,7 @@ autodoc_default_options = {
 }
 
 html_theme_options = {
-    'repository_url': 'https://github.com/NuttidaLab/SpikeRNN',
+    'repository_url': 'https://github.com/NuttidaLab/spikeRNN',
     "use_repository_button": True,
     "use_download_button": False,
     'repository_branch': 'main',
