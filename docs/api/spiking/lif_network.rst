@@ -52,13 +52,13 @@ Parameters
 Returns
 --------------------------------------------------------------------
 
-* `W`` (numpy.ndarray): Scaled recurrent connectivity matrix (N × N)
-* `REC` (numpy.ndarray): Membrane voltage traces for all neurons (timesteps × N)  
-* `spk` (numpy.ndarray): Binary spike matrix indicating spike times (N × timesteps)
-* `rs` (numpy.ndarray): Instantaneous firing rates for all neurons (N × timesteps)
-* `all_fr` (numpy.ndarray): Average firing rates for all neurons (N × 1)
-* `out` (numpy.ndarray): Network output signal (1 × timesteps)
-* `params` (dict): Simulation parameters including sampling rate and LIF constants
+* ``W`` (numpy.ndarray): Scaled recurrent connectivity matrix (N × N)
+* ``REC`` (numpy.ndarray): Membrane voltage traces for all neurons (timesteps × N)  
+* ``spk`` (numpy.ndarray): Binary spike matrix indicating spike times (N × timesteps)
+* ``rs`` (numpy.ndarray): Instantaneous firing rates for all neurons (N × timesteps)
+* ``all_fr`` (numpy.ndarray): Average firing rates for all neurons (N × 1)
+* ``out`` (numpy.ndarray): Network output signal (1 × timesteps)
+* ``params`` (dict): Simulation parameters including sampling rate and LIF constants
 
 Example Usage
 --------------------------------------------------------------------

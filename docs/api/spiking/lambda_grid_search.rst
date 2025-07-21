@@ -16,13 +16,13 @@ Grid Search Parameters
 
 The main grid search function accepts:
 
-* `model_dir` (str): Directory containing trained rate RNN model .mat files
+* ``model_dir`` (str): Directory containing trained rate RNN model .mat files
   (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0')
-* `task_name` (str): Task type ('go-nogo', 'xor', or 'mante')
+* ``task_name`` (str): Task type ('go-nogo', 'xor', or 'mante')
   (default: 'go-nogo')
-* `n_trials` (int): Number of trials to evaluate each scaling factor
+* ``n_trials`` (int): Number of trials to evaluate each scaling factor
   (default: 100)
-* `scaling_factors` (list): List of scaling factors to test
+* ``scaling_factors`` (list): List of scaling factors to test
   (default: [20, 25, 30, ..., 75])
 
 Single Trial Evaluation
@@ -30,11 +30,11 @@ Single Trial Evaluation
 
 The evaluate_single_trial function tests a specific scaling factor:
 
-* `curr_full` (str): Full path to model file
-* `scaling_factor` (float): Scaling factor to test
-* `task_name` (str): Name of the task to evaluate
-* `use_initial_weights` (bool): Whether to use initial weights instead of trained weights
-* `down_sample` (int): Temporal downsampling factor
+* ``curr_full`` (str): Full path to model file
+* ``scaling_factor`` (float): Scaling factor to test
+* ``task_name`` (str): Name of the task to evaluate
+* ``use_initial_weights`` (bool): Whether to use initial weights instead of trained weights
+* ``down_sample`` (int): Temporal downsampling factor
 
 Returns performance metrics for the given scaling factor.
 

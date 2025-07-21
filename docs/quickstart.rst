@@ -68,15 +68,15 @@ You can train and evaluate the network on different tasks by changing the --task
 Go-NoGo Task
 ~~~~~~~~~~~~
 
-Training: `... --task go-nogo ...`
+Training: ``... --task go-nogo ...``
 
-Evaluation: `python -m spiking.eval_go_nogo --model_dir ...`
+Evaluation: ``python -m spiking.eval_go_nogo --model_dir ...``
 
 
 XOR Task
 ~~~~~~~~
 
-Training: `... --task xor ...`
+Training: ``... --task xor ...``
 
 Evaluation: TBD
 
@@ -84,7 +84,7 @@ Evaluation: TBD
 Mante Task
 ~~~~~~~~~~
 
-Training: `... --task mante ...`
+Training: ``... --task mante ...``
 
 Evaluation: TBD
 
