@@ -291,10 +291,89 @@ class FR_RNN_dale(nn.Module):
         
         return stim, x, r, o, self.w, self.w_in, self.mask, self.som_mask, self.w_out, self.b_out, taus_gaus
 
+    def lesion_w(self, lesion_percentage: float) -> None:
+        """
+        Applies lesions to the recurrent weight matrix by setting a
+        percentage of connections to zero.
+
+        Args:
+            lesion_percentage (float): The percentage of connections to remove (0.0 to 1.0).
+        """
+        with torch.no_grad():
+            # Clone the original weight tensor to avoid modifying it directly during iteration
+            w_lesioned = self.w.clone()
+
+            # Get the indices of non-diagonal elements that are non-zero
+            non_diagonal_indices = torch.nonzero(self.w, as_tuple=False)
+
+            # Calculate the number of connections to remove
+            num_to_lesion = int(lesion_percentage * len(non_diagonal_indices))
+
+            # Randomly select connections to lesion
+            lesion_indices = torch.randperm(len(non_diagonal_indices))[:num_to_lesion]
+            indices_to_zero = non_diagonal_indices[lesion_indices]
+
+            # Set the selected weights to zero
+            for index in indices_to_zero:
+                w_lesioned[index[0], index[1]] = 0
+
+            # Update the model's weight parameter
+            self.w.data = w_lesioned
+    
+    def lesion_w_by_type(self, lesion_percentage: float) -> None:
+        """
+        Applies lesions by setting an equal percentage of existing connections
+        to zero for each neuron type pairing (E-E, E-I, I-E, I-I).
+
+        Args:
+            lesion_percentage (float): The percentage of connections to remove (0.0 to 1.0).
+        """
+        if not 0.0 <= lesion_percentage <= 1.0:
+            raise ValueError("lesion_percentage must be between 0.0 and 1.0")
+
+        with torch.no_grad():
+            w_lesioned = self.w.clone()
+
+            # Convert boolean numpy arrays to tensors for masking
+            exc_mask_t = torch.from_numpy(self.exc.flatten()).bool().to(self.w.device)
+            inh_mask_t = torch.from_numpy(self.inh.flatten()).bool().to(self.w.device)
+
+            # Define the four connection types using broadcasting to create masks
+            # Note: W[i, j] is from neuron j (column) to neuron i (row)
+            # mask[i, j] is True if it's a connection from type j to type i
+            connection_masks = {
+                "E_E": torch.outer(exc_mask_t, exc_mask_t), # To E (rows), From E (cols)
+                "E_I": torch.outer(inh_mask_t, exc_mask_t), # To I (rows), From E (cols)
+                "I_E": torch.outer(exc_mask_t, inh_mask_t), # To E (rows), From I (cols)
+                "I_I": torch.outer(inh_mask_t, inh_mask_t)  # To I (rows), From I (cols)
+            }
+            # Lesion each connection type separately
+            for conn_type, mask in connection_masks.items():
+                # Find the indices of existing (non-zero) connections for this type
+                indices = torch.nonzero(w_lesioned * mask, as_tuple=False)
+
+                if len(indices) == 0:
+                    continue  # No connections of this type to lesion
+
+                # Calculate the number of connections to remove
+                num_to_lesion = int(lesion_percentage * len(indices))
+
+                if num_to_lesion > 0:
+                    # Randomly select connections to lesion
+                    lesion_indices_perm = torch.randperm(len(indices))[:num_to_lesion]
+                    indices_to_zero = indices[lesion_indices_perm]
+
+                    # Set the selected weights to zero
+                    w_lesioned[indices_to_zero[:, 0], indices_to_zero[:, 1]] = 0
+
+            # Update the model's weight parameter
+            self.w.data = w_lesioned
+
+
 '''
 Task-specific input signals
 '''
-def generate_input_stim_go_nogo(settings: Dict[str, Any]) -> Tuple[np.ndarray, int]:
+def generate_input_stim_go_nogo(settings: Dict[str, Any], seed: bool = False) -> Tuple[np.ndarray, int]:
     """
     Generate the input stimulus matrix for the Go-NoGo task.
 
@@ -311,6 +390,9 @@ def generate_input_stim_go_nogo(settings: Dict[str, Any]) -> Tuple[np.ndarray, i
             - u: 1xT stimulus matrix
             - label: Either 1 (Go trial) or 0 (NoGo trial)
     """
+    if seed:
+        np.random.seed(42)
+    
     T = settings['T']
     stim_on = settings['stim_on']
     stim_dur = settings['stim_dur']
@@ -426,7 +508,7 @@ def generate_input_stim_mante(settings: Dict[str, Any]) -> Tuple[np.ndarray, int
 
     return u, label
 
-def generate_target_continuous_go_nogo(settings: Dict[str, Any], label: int) -> np.ndarray:
+def generate_target_continuous_go_nogo(settings: Dict[str, Any], label: int, seed: bool = False) -> np.ndarray:
     """
     Generate the target output signal for the Go-NoGo task.
 
@@ -440,6 +522,9 @@ def generate_target_continuous_go_nogo(settings: Dict[str, Any], label: int) -> 
     Returns:
         np.ndarray: 1xT target signal array.
     """
+    if seed:
+        np.random.seed(42)
+    
     T = settings['T']
     stim_on = settings['stim_on']
     stim_dur = settings['stim_dur']

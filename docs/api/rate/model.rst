@@ -1,7 +1,7 @@
 Rate RNN Model
 ============================================
 
-The main ` FR_RNN_dale` class and task-specific functions for creating stimuli and targets.
+The main ``FR_RNN_dale`` class and task-specific functions for creating stimuli and targets.
 
 Main Model Class
 ----------------------------------------
