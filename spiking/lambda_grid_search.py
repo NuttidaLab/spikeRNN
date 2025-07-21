@@ -125,6 +125,9 @@ def lambda_grid_search(model_dir, task_name, n_trials, scaling_factors):
         down_sample = 1
         mat_files = [f for f in os.listdir(model_dir) if f.endswith('.mat')]
 
+        if not mat_files:
+            raise FileNotFoundError(f"No .mat files found in directory: {model_dir}")
+
         for mat_file in mat_files:
             curr_full = os.path.join(model_dir, mat_file)
             print(f"Analyzing {mat_file}")
@@ -160,9 +163,13 @@ def lambda_grid_search(model_dir, task_name, n_trials, scaling_factors):
             model_data['scaling_factors'] = np.array(scaling_factors)
             sio.savemat(curr_full, model_data)
             print("Saved results.")
+            return opt_scaling_factor
 
-    except:
-        pass
+    except Exception as e:
+        print(f"Exception occurred in lambda_grid_search: {e}")
+        raise
+
+    
 
 def parse_range(range_str):
     parts = list(map(int, range_str.split(":")))
