@@ -158,6 +158,9 @@ w_dist = 'gaus' # recurrent weight distribution (Gaussian or Gamma)
 net = FR_RNN_dale(N, P_inh, P_rec, w_in, som_N, w_dist, args.gain, args.apply_dale, w_out, device)
 print('Intialized the network...')
 
+# Snapshot initial weights before any training
+w0 = net.w.clone().detach()
+
 '''
 Define the training parameters (learning rate, training termination criteria, etc...)
 '''
@@ -204,7 +207,7 @@ if args.mode.lower() == 'train':
     u_tensor = torch.tensor(u, dtype=torch.float32, device=device)
     
     # Get initial network outputs
-    stim0, x0, r0, o0, w0, w_in0, m0, som_m0, w_out0, b_out0, taus_gaus0 = \
+    stim0, x0, r0, o0, _, w_in0, m0, som_m0, w_out0, b_out0, taus_gaus0 = \
             net.forward(u_tensor, settings['taus'], training_params, settings)
 
     # For storing all the loss vals
@@ -376,6 +379,7 @@ if args.mode.lower() == 'train':
     # print(elapsed_time)
 
     # Save the trained params in a .mat file
+    w = net.w.clone().detach() # Snapshot final weights after training
     var = {}
     var['x0'] = x0[0].detach().cpu().numpy()
     var['r0'] = r0[0].detach().cpu().numpy()
