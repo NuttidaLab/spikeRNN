@@ -6,7 +6,7 @@ The main ``FR_RNN_dale`` class and task-specific functions for creating stimuli 
 Main Model Class
 ----------------------------------------
 
-.. autoclass:: rate.model.FR_RNN_dale
+.. autoclass:: rate.model.FR_RNN_dale 
    :members:
    :undoc-members:
    :show-inheritance:
