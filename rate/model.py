@@ -390,7 +390,7 @@ def generate_input_stim_go_nogo(settings: Dict[str, Any], seed: bool = False) ->
             - u: 1xT stimulus matrix
             - label: Either 1 (Go trial) or 0 (NoGo trial)
     """
-    if seed:
+    if seed == True:
         np.random.seed(42)
     
     T = settings['T']
@@ -522,7 +522,7 @@ def generate_target_continuous_go_nogo(settings: Dict[str, Any], label: int, see
     Returns:
         np.ndarray: 1xT target signal array.
     """
-    if seed:
+    if seed == True:
         np.random.seed(42)
     
     T = settings['T']
@@ -543,41 +543,65 @@ def generate_target_continuous_xor(settings: Dict[str, Any], label: str) -> np.n
     Generate the target output signal for the XOR task.
 
     Args:
-        settings (Dict[str, Any]): Dictionary containing the following keys:
-            - T: Duration of a single trial (in steps)
+        settings (Dict[str, Any]): Dictionary containing task parameters.
         label (str): Either 'same' or 'diff'.
 
     Returns:
-        np.ndarray: 1xT target signal array.
+        np.ndarray: A 1D target signal array of shape (T,).
     """
     T = settings['T']
+    stim_on = settings['stim_on']
+    stim_dur = settings['stim_dur']
+    delay = settings['delay']
 
-    target = np.zeros((T-1,))
+    # Calculate the time when the second stimulus presentation ends
+    task_end_T = stim_on + (2 * stim_dur) + delay
+
+    # Initialize the target signal array with shape (1, T)
+    z = np.zeros((1, T))
+
+    # Define the target window: starts 10 steps after the task ends and lasts for 100 steps
+    target_onset = 10 + task_end_T
+    target_offset = target_onset + 100
+
+    # Assign the target value based on the label
     if label == 'same':
-        target[200:] = 1
+        z[0, target_onset:target_offset] = 1
     elif label == 'diff':
-        target[200:] = -1
+        z[0, target_onset:target_offset] = -1
 
-    return target
+    return np.squeeze(z)
+
 
 def generate_target_continuous_mante(settings: Dict[str, Any], label: int) -> np.ndarray:
     """
-    Generate the target output signal for the sensory integration task from Mante et al (2013).
+    Generate the target output signal for the sensory integration task.
 
     Args:
-        settings (Dict[str, Any]): Dictionary containing the following keys:
-            - T: Duration of a single trial (in steps)
-        label (int): Either +1 or -1 (the correct decision).
+        settings (Dict[str, Any]): Dictionary containing task parameters.
+        label (int): Either +1 or -1, the correct decision.
 
     Returns:
-        np.ndarray: 1xT target signal array.
+        np.ndarray: A 1D target signal array of shape (T,).
     """
     T = settings['T']
+    stim_on = settings['stim_on']
+    stim_dur = settings['stim_dur']
 
-    target = np.zeros((T-1,))
-    target[-200:] = label
+    # Initialize the target signal array with shape (1, T)
+    z = np.zeros((1, T))
+    
+    # Calculate the target onset time dynamically
+    target_onset = stim_on + stim_dur
 
-    return target
+    # Assign the target value from the onset time to the end of the trial
+    if label == 1:
+        z[0, target_onset:] = 1
+    else:
+        z[0, target_onset:] = -1
+
+    # Squeeze the array to shape (T,) to match the original's output
+    return np.squeeze(z)
 
 def loss_op(o: List[torch.Tensor], z: np.ndarray, training_params: Dict[str, Any]) -> torch.Tensor:
     """
@@ -599,9 +623,9 @@ def loss_op(o: List[torch.Tensor], z: np.ndarray, training_params: Dict[str, Any
     z_tensor = torch.tensor(z, dtype=torch.float32, device=o[0].device)
     
     for i in range(len(o)):
-        if loss_fn.lower() == 'l1':
+        if loss_fn.lower() == 'l1': # mean absolute error (MAE)
             loss = loss + torch.norm(o[i].squeeze() - z_tensor[i], p=1)
-        elif loss_fn.lower() == 'l2':
+        elif loss_fn.lower() == 'l2': # root mean squared error (RMSE)
             loss = loss + (o[i].squeeze() - z_tensor[i])**2
     
     if loss_fn.lower() == 'l2':
