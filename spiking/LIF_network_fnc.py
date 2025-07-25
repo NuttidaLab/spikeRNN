@@ -79,8 +79,14 @@ def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_ini
     som_m = model_data['som_m']
     w_out = model_data['w_out']
     
-    w_in = w_in.reshape(N, 1)
-    w_out = w_out.reshape(1, N)
+    # w_in = w_in.reshape(N, 1)
+    # w_out = w_out.reshape(1, N)
+    
+    # If a weight vector was loaded as 1D, reshape it to a 2D column/row vector
+    if w_in.ndim == 1:
+        w_in = w_in.reshape(N, 1)
+    if w_out.ndim == 1:
+        w_out = w_out.reshape(1, N)
 
     inh = model_data['inh'].flatten()
     exc = model_data['exc'].flatten()
