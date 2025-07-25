@@ -32,7 +32,20 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def eval_go_nogo(model_dir='../models/go-nogo/P_rec_0.2_Taus_4.0_20.0', optimal_scaling_factor=None):
+def eval_go_nogo(model_dir='models/go-nogo/P_rec_0.2_Taus_4.0_20.0', optimal_scaling_factor=None, settings=None):
+    """
+    Evaluate a trained LIF RNN model constructed to perform the Go-NoGo task.
+    This task requires the network to respond to “Go” stimuli and withhold responses to “NoGo” stimuli.
+    .
+
+    Args:
+        model_dir (str, optional): Path to directory containing trained model files.
+        optimal_scaling_factor (float, optional): Optimal scaling factor for the rate-to-spiking conversion.
+        settings (dict, optional): Task settings dictionary.
+
+    Returns:
+        None
+    """    
     # First, load one trained rate RNN
     # Make sure lambda_grid_search.py was performed on the model.
    
@@ -56,6 +69,16 @@ def eval_go_nogo(model_dir='../models/go-nogo/P_rec_0.2_Taus_4.0_20.0', optimal_
 
     print(f"Optimal scaling factor: {opt_scaling_factor}")
     
+    if settings is None: # default task settings
+        T = 201
+        stim_on = 30
+        stim_dur = 20
+        delay = 10
+        print(f"Using default task settings: T={T}, stim_on={stim_on}, stim_dur={stim_dur}, delay={delay}")
+    else:
+        T, stim_on, stim_dur, delay = (
+            int(settings['T']), int(settings['stim_on']), int(settings['stim_dur']), int(settings['delay'])
+        )
     use_initial_weights = False
     scaling_factor = opt_scaling_factor
     down_sample = 1
@@ -63,14 +86,13 @@ def eval_go_nogo(model_dir='../models/go-nogo/P_rec_0.2_Taus_4.0_20.0', optimal_
     # --------------------------------------------------------------
     # NoGo trial example
     # --------------------------------------------------------------
-    u = np.zeros((1, 201))  # input stim
+    u_nogo = np.zeros((1, T))  # input stim
 
     # Run the LIF simulation 
     stims = {'mode': 'none'}
     W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(model_path, scaling_factor,
-                                                           u, stims, down_sample, use_initial_weights)
+                                                           u_nogo, stims, down_sample, use_initial_weights)
     dt = params['dt']
-    T = params['T']
     nt = params['nt']
         
     t = np.arange(dt, dt*(nt+1), dt)[:nt]
@@ -82,18 +104,13 @@ def eval_go_nogo(model_dir='../models/go-nogo/P_rec_0.2_Taus_4.0_20.0', optimal_
     # --------------------------------------------------------------
     # Go trial example
     # --------------------------------------------------------------
-    u = np.zeros((1, 201))
-    u[0, 30:50] = 1 
+    u_go = np.zeros((1, T))
+    u_go[0, stim_on:stim_on+stim_dur] = 1 
     
     # Run the LIF simulation 
     stims = {'mode': 'none'}
     W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(model_path, scaling_factor,
-                                                           u, stims, down_sample, use_initial_weights)
-    dt = params['dt']
-    T = params['T']
-    nt = params['nt']
-    
-    t = np.arange(dt, dt*(nt+1), dt)[:nt]
+                                                           u_go, stims, down_sample, use_initial_weights)
 
     go_out = out.flatten()   # LIF network output
     go_rs = rs     # firing rates
@@ -166,11 +183,14 @@ def eval_go_nogo(model_dir='../models/go-nogo/P_rec_0.2_Taus_4.0_20.0', optimal_
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Evaluate a trained LIF RNN model constructed to perform the Go-NoGo task.')
-    parser.add_argument('--model_dir', type=str, default=_DEFAULT_MODEL_DIR,
+    parser.add_argument('--model_dir', type=str, default='models/go-nogo/P_rec_0.2_Taus_4.0_20.0',
                       help='Directory containing the trained rate RNN model .mat files')
+    parser.add_argument('--optimal_scaling_factor', type=float, default=None,
+                      help='Optimal scaling factor for the rate-to-spiking conversion')
+
     args = parser.parse_args()
     
-    eval_go_nogo(model_dir=args.model_dir) 
+    eval_go_nogo(model_dir=args.model_dir, optimal_scaling_factor=args.optimal_scaling_factor) 
     
     # Run the following command from the spikeRNN directory:
     """
