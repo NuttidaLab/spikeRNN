@@ -14,8 +14,8 @@ This example shows the complete workflow from training a rate RNN to converting 
     import torch
     import numpy as np
     from rate import FR_RNN_dale, set_gpu, create_default_config
-    from rate.model import generate_input_stim_go_nogo, generate_target_continuous_go_nogo
-    from spiking import LIF_network_fnc, lambda_grid_search, eval_go_nogo
+    from rate.tasks import TaskFactory
+    from spiking import LIF_network_fnc, lambda_grid_search, evaluate_task
 
     # Step 1: Set up GPU and configuration
     device = set_gpu('0', 0.3)
@@ -126,7 +126,7 @@ The XOR task requires temporal working memory to compute XOR of two sequential i
 
 .. code-block:: python
 
-    from rate.model import generate_input_stim_xor, generate_target_continuous_xor
+    from rate.tasks import TaskFactory
     
     # Task settings
     settings = {
@@ -142,8 +142,8 @@ The XOR task requires temporal working memory to compute XOR of two sequential i
     # Training loop
     for tr in range(n_trials):
         optimizer.zero_grad()
-        
-        u, label = generate_input_stim_xor(settings)
+        generate_input_stim_xor
+        u, label = (settings)
         target = generate_target_continuous_xor(settings, label)
         u_tensor = torch.tensor(u, dtype=torch.float32, device=device)
         
@@ -221,33 +221,33 @@ For example, to evaluate the Go-NoGo task for a specific model, run the followin
 
 .. code-block:: bash
 
-    python -m spiking.eval_go_nogo \
+    python -m spiking.eval_tasks --task go_nogo \
         --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0
 
 If you have a specific scaling factor you want to use, you can specify it:
 
 .. code-block:: bash
 
-    python -m spiking.eval_go_nogo \
+    python -m spiking.eval_tasks --task go_nogo \
         --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0 \
-        --optimal_scaling_factor 50.0
+        --scaling_factor 50.0
 
 
 Alternatively, you can call the evaluation function from a Python script:
 
 .. code-block:: python
 
-    from spiking import eval_go_nogo
+    from spiking.eval_tasks import evaluate_task
     
     # Evaluate Go-NoGo performance
-    eval_go_nogo(
+    performance = evaluate_task(
+        task_name='go_nogo',
         model_dir='models/go-nogo/P_rec_0.2_Taus_4.0_20.0'
     )
 
-If you have a specific scaling factor you want to use, you can specify it:
+All registered tasks can be evaluated using the same interface:
 
 .. code-block:: bash
 
-    python -m spiking.eval_go_nogo \
-        --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0 \
-        --optimal_scaling_factor 50.0
+    python -m spiking.eval_tasks --task xor --model_dir models/xor/
+    python -m spiking.eval_tasks --task mante --model_dir models/mante/

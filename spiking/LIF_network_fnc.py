@@ -28,8 +28,9 @@ warnings.filterwarnings("ignore")
 
 def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_initial_weights):
     """
-    FUNCTION LIF_network_fnc
-    INPUT
+    Convert a trained rate RNN to a spiking RNN (leaky integrate-and-fire).
+    
+    Args:
       - model_or_path: trained model full path (directory + filename) or loaded model data (dict)
       - scaling_factor: scaling factor for transferring weights from rate to spk
       - u: input stimulus to be used
@@ -43,7 +44,7 @@ def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_ini
       - use_initial_weights: whether to use w0 (random initial weights). This is mainly used
                              for testing.
 
-    OUTPUT
+    Returns:
       - W: recurrent connectivity matrix scaled by the scaling factor (N x N)
       - REC: membrane voltage from all the units (N x t)
       - spk: binary matrix indicating spikes (N x t)
@@ -78,9 +79,6 @@ def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_ini
     m = model_data['m']
     som_m = model_data['som_m']
     w_out = model_data['w_out']
-    
-    # w_in = w_in.reshape(N, 1)
-    # w_out = w_out.reshape(1, N)
     
     # If a weight vector was loaded as 1D, reshape it to a 2D column/row vector
     if w_in.ndim == 1:
@@ -189,7 +187,7 @@ def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_ini
         Is[:, i] = ext_stim[:, stim_idx]
 
         # LIF voltage equation with refractory period
-        dv = ((dt * (i + 1) > tlast + tref).to(torch.float64) * (-v + I) / tm)  # linear LIF, using i+1 to match MATLAB
+        dv = ((dt * (i + 1) > tlast + tref).to(torch.float64) * (-v + I) / tm)  # linear LIF
         v = v + dt * dv + torch.randn(N, device=device, dtype=torch.float64) / 10
 
         # Artificial stimulation/inhibition

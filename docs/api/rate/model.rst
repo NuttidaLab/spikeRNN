@@ -10,40 +10,23 @@ Main Model Class
    :members:
    :undoc-members:
    :show-inheritance:
-   :noindex:
 
-Task Functions
-----------------------------------------
-
-XOR Task
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autofunction:: rate.model.generate_input_stim_xor
-   :noindex:
-
-.. autofunction:: rate.model.generate_target_continuous_xor
-   :noindex:
-
-Mante Task  
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autofunction:: rate.model.generate_input_stim_mante
-   :noindex:
-
-.. autofunction:: rate.model.generate_target_continuous_mante
-   :noindex:
-
-Go-NoGo Task
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autofunction:: rate.model.generate_input_stim_go_nogo
-   :noindex:
-
-.. autofunction:: rate.model.generate_target_continuous_go_nogo
-   :noindex:
-
-Loss Function
+Core Functions
 ----------------------------------------
 
 .. autofunction:: rate.model.loss_op
-   :noindex: 
+
+.. autofunction:: rate.model.eval_rnn
+
+Overview
+--------
+
+The model module provides the core rate-based RNN implementation with Dale's principle (separate excitatory and inhibitory neurons). 
+
+**Key Components:**
+
+* **FR_RNN_dale**: Main rate RNN class with excitatory/inhibitory neuron types
+* **loss_op**: Loss function for training rate RNNs
+* **eval_rnn**: Evaluation function for running trained networks
+
+**Note**: Task-specific stimulus and target generation functions have been moved to the :doc:`tasks` module as part of the new task-based architecture. For creating stimuli and targets, use the task classes from ``rate.tasks`` instead. 

@@ -25,14 +25,7 @@ from utils import str2bool
 from model import FR_RNN_dale
 
 # Import the tasks
-from model import generate_input_stim_xor
-from model import generate_target_continuous_xor
-
-from model import generate_input_stim_mante
-from model import generate_target_continuous_mante
-
-from model import generate_input_stim_go_nogo
-from model import generate_target_continuous_go_nogo
+from tasks import TaskFactory
 
 from model import loss_op
 
@@ -169,7 +162,7 @@ training_params = {
         'loss_threshold': 7, # loss threshold (when to stop training)
         'eval_freq': 100, # how often to evaluate task perf
         'eval_tr': 100, # number of trials for eval
-        'eval_amp_threh': 0.7, # amplitude threshold during response window
+        'eval_amp_threh': 0.3, # amplitude threshold during response window
         'activation': args.act.lower(), # activation function
         'loss_fn': args.loss_fn.lower(), # loss function ('L1' or 'L2')
         'P_rec': 0.20
@@ -190,18 +183,8 @@ if args.mode.lower() == 'train':
     training_success = False
 
     # Get initial states
-    if args.task.lower() == 'go-nogo':
-        # Go-NoGo task
-        u, label = generate_input_stim_go_nogo(settings)
-        target = generate_target_continuous_go_nogo(settings, label)
-    elif args.task.lower() == 'xor':
-        # XOR task
-        u, label = generate_input_stim_xor(settings)
-        target = generate_target_continuous_xor(settings, label)
-    elif args.task.lower() == 'mante':
-        # Sensory integration task
-        u, label = generate_input_stim_mante(settings)
-        target = generate_target_continuous_mante(settings, label)
+    task = TaskFactory.create_task(args.task.lower().replace('-', '_'), settings)
+    u, target, label = task.simulate_trial()
 
     # Convert to tensor
     u_tensor = torch.tensor(u, dtype=torch.float32, device=device)
@@ -220,15 +203,7 @@ if args.mode.lower() == 'train':
         optimizer.zero_grad()
 
         # Generate a task-specific input signal
-        if args.task.lower() == 'go-nogo':
-            u, label = generate_input_stim_go_nogo(settings)
-            target = generate_target_continuous_go_nogo(settings, label)
-        elif args.task.lower() == 'xor':
-            u, label = generate_input_stim_xor(settings)
-            target = generate_target_continuous_xor(settings, label)
-        elif args.task.lower() == 'mante':
-            u, label = generate_input_stim_mante(settings)
-            target = generate_target_continuous_mante(settings, label)
+        u, target, label = task.simulate_trial()
 
         print("Trial " + str(tr) + ': ' + str(label))
 
@@ -264,8 +239,7 @@ if args.mode.lower() == 'train':
                 net.eval()
                 with torch.no_grad():
                     for ii in range(eval_perf.shape[-1]):
-                        eval_u, eval_label = generate_input_stim_go_nogo(settings)
-                        eval_target = generate_target_continuous_go_nogo(settings, eval_label)
+                        eval_u, eval_target, eval_label = task.simulate_trial()
                         eval_u_tensor = torch.tensor(eval_u, dtype=torch.float32, device=device)
                         _, _, _, eval_o, _, _, _, _, _, _, _ = \
                                 net.forward(eval_u_tensor, settings['taus'], training_params, settings)
@@ -285,8 +259,8 @@ if args.mode.lower() == 'train':
                                 eval_perf[0, ii] = 1
                 
                 net.train()
-                eval_perf_mean = np.nanmean(eval_perf, 1)
-                eval_loss_mean = np.nanmean(eval_losses, 1)
+                eval_perf_mean = np.nanmean(eval_perf, 1)[0]
+                eval_loss_mean = np.nanmean(eval_losses, 1)[0]
                 print("Perf: %.2f, Loss: %.2f"%(eval_perf_mean, eval_loss_mean))
 
                 if eval_loss_mean < training_params['loss_threshold'] and eval_perf_mean > 0.95 and tr > 1500:
@@ -303,11 +277,18 @@ if args.mode.lower() == 'train':
                 eval_os = np.zeros((training_params['eval_tr'], settings['T']-1))
                 eval_labels = []
                 
+                # Calculate evaluation window dynamically
+                stim_on = settings['stim_on']
+                stim_dur = settings['stim_dur']
+                delay = settings['delay']
+                task_end_T = stim_on + (2 * stim_dur) + delay
+                eval_onset = 10 + task_end_T
+                eval_offset = eval_onset + 100
+                
                 net.eval()
                 with torch.no_grad():
                     for ii in range(eval_perf.shape[-1]):
-                        eval_u, eval_label = generate_input_stim_xor(settings)
-                        eval_target = generate_target_continuous_xor(settings, eval_label)
+                        eval_u, eval_target, eval_label = task.simulate_trial()
                         eval_u_tensor = torch.tensor(eval_u, dtype=torch.float32, device=device)
                         _, _, _, eval_o, _, _, _, _, _, _, _ = \
                                 net.forward(eval_u_tensor, settings['taus'], training_params, settings)
@@ -319,16 +300,17 @@ if args.mode.lower() == 'train':
                         eval_losses[0, ii] = eval_l
                         eval_os[ii, :] = eval_o_np
                         eval_labels.append(eval_label)
+                        
                         if eval_label == 'same':
-                            if np.max(eval_o_np[200:]) > training_params['eval_amp_threh']:
+                            if np.max(eval_o_np[eval_onset:eval_offset]) > training_params['eval_amp_threh']:
                                 eval_perf[0, ii] = 1
                         else:
-                            if np.min(eval_o_np[200:]) < -training_params['eval_amp_threh']:
+                            if np.min(eval_o_np[eval_onset:eval_offset]) < -training_params['eval_amp_threh']:
                                 eval_perf[0, ii] = 1
                 
                 net.train()
-                eval_perf_mean = np.nanmean(eval_perf, 1)
-                eval_loss_mean = np.nanmean(eval_losses, 1)
+                eval_perf_mean = np.nanmean(eval_perf, 1)[0]
+                eval_loss_mean = np.nanmean(eval_losses, 1)[0]
                 print("Perf: %.2f, Loss: %.2f"%(eval_perf_mean, eval_loss_mean))
 
                 if eval_loss_mean < training_params['loss_threshold'] and eval_perf_mean > 0.95:
@@ -337,6 +319,7 @@ if args.mode.lower() == 'train':
 
         # Sensory integration task
         elif args.task.lower() == 'mante':
+            resp_onset = settings['stim_on'] + settings['stim_dur']
             if (tr-1)%training_params['eval_freq'] == 0:
                 eval_perf = np.zeros((1, training_params['eval_tr']))
                 eval_losses = np.zeros((1, training_params['eval_tr']))
@@ -346,8 +329,7 @@ if args.mode.lower() == 'train':
                 net.eval()
                 with torch.no_grad():
                     for ii in range(eval_perf.shape[-1]):
-                        eval_u, eval_label = generate_input_stim_mante(settings)
-                        eval_target = generate_target_continuous_mante(settings, eval_label)
+                        eval_u, eval_target, eval_label = task.simulate_trial()
                         eval_u_tensor = torch.tensor(eval_u, dtype=torch.float32, device=device)
                         _, _, _, eval_o, _, _, _, _, _, _, _ = \
                                 net.forward(eval_u_tensor, settings['taus'], training_params, settings)
@@ -360,15 +342,15 @@ if args.mode.lower() == 'train':
                         eval_os[ii, :] = eval_o_np
                         eval_labels[ii, ] = eval_label
                         if eval_label == 1:
-                            if np.max(eval_o_np[-200:]) > training_params['eval_amp_threh']:
+                            if np.max(eval_o_np[resp_onset:]) > training_params['eval_amp_threh']:
                                 eval_perf[0, ii] = 1
                         else:
-                            if np.min(eval_o_np[-200:]) < -training_params['eval_amp_threh']:
+                            if np.min(eval_o_np[resp_onset:]) < -training_params['eval_amp_threh']:
                                 eval_perf[0, ii] = 1
                 
                 net.train()
-                eval_perf_mean = np.nanmean(eval_perf, 1)
-                eval_loss_mean = np.nanmean(eval_losses, 1)
+                eval_perf_mean = np.nanmean(eval_perf, 1)[0]
+                eval_loss_mean = np.nanmean(eval_losses, 1)[0]
                 print("Perf: %.2f, Loss: %.2f"%(eval_perf_mean, eval_loss_mean))
 
                 if eval_loss_mean < training_params['loss_threshold'] and eval_perf_mean > 0.95:
@@ -431,3 +413,14 @@ if args.mode.lower() == 'train':
         'final_loss': t_loss.item(),
         'trial': tr,
         }, os.path.join(out_dir, fname.replace('.mat', '.pth'))) 
+    
+    
+    
+    # Example command to run the training
+    """
+    python main.py --gpu 0 --gpu_frac 0.20 \
+        --n_trials 5000 --mode train \
+        --N 200 --P_inh 0.20 --som_N 0 --apply_dale True \
+        --gain 1.5 --task go-nogo --act sigmoid --loss_fn l2 \
+        --decay_taus 4 20 --output_dir ../
+    """

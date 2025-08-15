@@ -10,13 +10,17 @@ Core Modules
    :maxdepth: 1
 
    model
+   tasks
    utils
 
 Module Overview
 ---------------
 
 **model.py**
-    Contains the main `FR_RNN_dale` class and task-specific functions for creating stimuli and targets.
+    Contains the main `FR_RNN_dale` class and backward-compatible task functions.
+
+**tasks.py**
+    Task-based architecture with abstract base classes and concrete task implementations for cognitive tasks.
 
 **utils.py**
     Utility functions for GPU management, training helpers, and network configuration.
@@ -28,16 +32,23 @@ Quick Reference
 
 * ``FR_RNN_dale``: Main rate RNN class with Dale's principle
 * ``RNNConfig``: Configuration dataclass for rate RNN parameters
+* ``AbstractTask``: Base class for all cognitive tasks
+* ``TaskFactory``: Factory for creating task instances
+
+**Task Classes:**
+
+* ``GoNogoTask``: Go-NoGo impulse control task
+* ``XORTask``: Temporal XOR working memory task
+* ``ManteTask``: Context-dependent sensory integration task
 
 **Key Functions:**
 
 * ``set_gpu()``: GPU device configuration
 * ``create_default_config()``: Create default configuration
-* ``generate_input_stim_**()``: Task stimulus generation functions
-* ``generate_target_continuous_*()``: Task target generation functions
+* ``TaskFactory.create_task()``: Create task instances
 
 **Supported Tasks:**
 
 * Go-NoGo: Binary decision task with response inhibition
 * XOR: Temporal exclusive OR requiring working memory
-* Mante: Context-dependent sensory integration task 
+* Mante: Context-dependent sensory integration task

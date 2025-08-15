@@ -41,7 +41,7 @@ Classes:
 Functions:
     LIF_network_fnc: Main rate-to-spike conversion function
     lambda_grid_search: Optimize scaling factors via grid search
-    eval_go_nogo: Evaluate Go-NoGo task performance
+    evaluate_task: Unified evaluation interface for all tasks
     load_rate_model: Load MATLAB .mat model files
     create_connectivity_masks: Generate network connectivity
     validate_stimulus: Validate input stimulus format
@@ -52,8 +52,8 @@ from typing import Optional
 
 # Core functions
 from .LIF_network_fnc import LIF_network_fnc
-from .lambda_grid_search import lambda_grid_search, evaluate_single_trial
-from .eval_go_nogo import eval_go_nogo
+from .lambda_grid_search import lambda_grid_search
+from .eval_tasks import evaluate_task
 
 # Utility functions 
 from .utils import (
@@ -61,10 +61,6 @@ from .utils import (
     create_connectivity_masks,
     generate_lif_params,
     validate_stimulus,
-    check_gpu_availability,
-    set_random_seed,
-    format_spike_data,
-    validate_scaling_factor
 )
 
 # Abstract base classes and configuration
@@ -77,6 +73,15 @@ from .abstract import (
     create_default_spiking_config
 )
 
+# Task classes
+from .tasks import (
+    AbstractSpikingTask,
+    GoNogoSpikingTask,
+    XORSpikingTask, 
+    ManteSpikingTask,
+    SpikingTaskFactory
+)
+
 # Version info
 __version__ = "0.1.0"
 __author__ = "NuttidaLab"
@@ -86,13 +91,18 @@ __email__ = "nr2869@columbia.edu"
 __all__ = [
     # Core spiking functions
     "LIF_network_fnc",
-    "eval_go_nogo", 
     "lambda_grid_search",
-    "evaluate_single_trial",
+    "evaluate_task",
+    
+    # Task classes
+    "AbstractSpikingTask",
+    "GoNogoSpikingTask",
+    "XORSpikingTask",
+    "ManteSpikingTask", 
+    "SpikingTaskFactory",
     
     # Utility functions
     "load_rate_model",
-    "load_rate_model_mat",
     "create_connectivity_masks",
     "generate_lif_params",
     "validate_stimulus",

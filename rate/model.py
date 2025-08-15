@@ -78,6 +78,7 @@ class FR_RNN_dale(nn.Module):
         self.w_out = nn.Parameter(torch.tensor(w_out, dtype=torch.float32, device=device))
         self.b_out = nn.Parameter(torch.tensor(0.0, dtype=torch.float32, device=device))
 
+
     def assign_exc_inh(self) -> Tuple[np.ndarray, np.ndarray, int, int, Union[np.ndarray, int]]:
         """
         Method to randomly assign units as excitatory or inhibitory (Dale's principle).
@@ -231,7 +232,7 @@ class FR_RNN_dale(nn.Module):
         
         # Initialize taus_gaus for time constants
         if len(taus) > 1:
-            taus_gaus = torch.randn(self.N, 1, device=self.device, requires_grad=True)
+            taus_gaus = nn.Parameter(torch.randn(self.N, 1, device=self.device))
         else:
             taus_gaus = torch.randn(self.N, 1, device=self.device, requires_grad=False)
         
@@ -370,246 +371,13 @@ class FR_RNN_dale(nn.Module):
             self.w.data = w_lesioned
 
 
-'''
-Task-specific input signals
-'''
-def generate_input_stim_go_nogo(settings: Dict[str, Any], seed: bool = False) -> Tuple[np.ndarray, int]:
-    """
-    Generate the input stimulus matrix for the Go-NoGo task.
-
-    Args:
-        settings (Dict[str, Any]): Dictionary containing the following keys:
-            - T: Duration of a single trial (in steps)
-            - stim_on: Stimulus starting time (in steps)
-            - stim_dur: Stimulus duration (in steps)
-            - taus: Time-constants (in steps)
-            - DeltaT: Sampling rate
-
-    Returns:
-        Tuple[np.ndarray, int]: Tuple containing:
-            - u: 1xT stimulus matrix
-            - label: Either 1 (Go trial) or 0 (NoGo trial)
-    """
-    if seed == True:
-        np.random.seed(42)
-    
-    T = settings['T']
-    stim_on = settings['stim_on']
-    stim_dur = settings['stim_dur']
-
-    u = np.zeros((1, T)) #+ np.random.randn(1, T)
-    u_lab = np.zeros((2, 1))
-    if np.random.rand() <= 0.50:
-        u[0, stim_on:stim_on+stim_dur] = 1
-        label = 1
-    else:
-        label = 0 
-
-    return u, label
-
-def generate_input_stim_xor(settings: Dict[str, Any]) -> Tuple[np.ndarray, str]:
-    """
-    Generate the input stimulus matrix for the XOR task.
-
-    Args:
-        settings (Dict[str, Any]): Dictionary containing the following keys:
-            - T: Duration of a single trial (in steps)
-            - stim_on: Stimulus starting time (in steps)
-            - stim_dur: Stimulus duration (in steps)
-            - delay: Delay between two stimuli (in steps)
-            - taus: Time-constants (in steps)
-            - DeltaT: Sampling rate
-
-    Returns:
-        Tuple[np.ndarray, str]: Tuple containing:
-            - u: 2xT stimulus matrix
-            - label: Either 'same' or 'diff'
-    """
-    T = settings['T']
-    stim_on = settings['stim_on']
-    stim_dur = settings['stim_dur']
-    delay = settings['delay']
-
-    # Initialize u
-    u = np.zeros((2, T))
-
-    # XOR task
-    labs = []
-    if np.random.rand() < 0.50:
-        u[0, stim_on:stim_on+stim_dur] = 1
-        labs.append(1)
-    else:
-        u[0, stim_on:stim_on+stim_dur] = -1
-        labs.append(-1)
-
-    if np.random.rand() < 0.50:
-        u[1, stim_on+stim_dur+delay:stim_on+2*stim_dur+delay] = 1
-        labs.append(1)
-    else:
-        u[1, stim_on+stim_dur+delay:stim_on+2*stim_dur+delay] = -1
-        labs.append(-1)
-
-    if np.prod(labs) == 1:
-        label = 'same'
-    else:
-        label = 'diff'
-
-    return u, label
-
-def generate_input_stim_mante(settings: Dict[str, Any]) -> Tuple[np.ndarray, int]:
-    """
-    Generate the input stimulus matrix for the sensory integration task from Mante et al (2013).
-
-    Args:
-        settings (Dict[str, Any]): Dictionary containing the following keys:
-            - T: Duration of a single trial (in steps)
-            - stim_on: Stimulus starting time (in steps)
-            - stim_dur: Stimulus duration (in steps)
-            - DeltaT: Sampling rate
-
-    Returns:
-        Tuple[np.ndarray, int]: Tuple containing:
-            - u: 4xT stimulus matrix
-            - label: Either +1 or -1 (the correct decision)
-    """
-    T = settings['T']
-    stim_on = settings['stim_on']
-    stim_dur = settings['stim_dur']
-
-    # Initialize stimulus
-    u = np.zeros((4, T))
-
-    # Color task
-    color_input = 2.5*(np.random.rand()-0.5) # [-1.25, 1.25]
-    motion_input = 2.5*(np.random.rand()-0.5) # [-1.25, 1.25]
-
-    # Context signal
-    if np.random.rand() < 0.50:
-        # Context = color task
-        u[0, stim_on:stim_on+stim_dur] = 1 # context cue
-        u[1, stim_on:stim_on+stim_dur] = color_input # color input
-        u[2, stim_on:stim_on+stim_dur] = motion_input # motion input (irrelevant in this context)
-
-        if color_input > 0:
-            label = 1 # choose option 1
-        else:
-            label = -1 # choose option 2
-
-    else:
-        # Context = motion task
-        u[0, stim_on:stim_on+stim_dur] = -1 # context cue
-        u[1, stim_on:stim_on+stim_dur] = color_input # color input (irrelevant in this context)
-        u[2, stim_on:stim_on+stim_dur] = motion_input # motion input
-
-        if motion_input > 0:
-            label = 1 # choose option 1
-        else:
-            label = -1 # choose option 2
-
-    return u, label
-
-def generate_target_continuous_go_nogo(settings: Dict[str, Any], label: int, seed: bool = False) -> np.ndarray:
-    """
-    Generate the target output signal for the Go-NoGo task.
-
-    Args:
-        settings (Dict[str, Any]): Dictionary containing the following keys:
-            - T: Duration of a single trial (in steps)
-            - stim_on: Stimulus starting time (in steps)
-            - stim_dur: Stimulus duration (in steps)
-        label (int): Either 1 (Go trial) or 0 (NoGo trial).
-
-    Returns:
-        np.ndarray: 1xT target signal array.
-    """
-    if seed == True:
-        np.random.seed(42)
-    
-    T = settings['T']
-    stim_on = settings['stim_on']
-    stim_dur = settings['stim_dur']
-
-    target = np.zeros((T-1,))
-    resp_onset = stim_on + stim_dur
-    if label == 1:
-        target[resp_onset:] = 1
-    else:
-        target[resp_onset:] = 0
-
-    return target
-
-def generate_target_continuous_xor(settings: Dict[str, Any], label: str) -> np.ndarray:
-    """
-    Generate the target output signal for the XOR task.
-
-    Args:
-        settings (Dict[str, Any]): Dictionary containing task parameters.
-        label (str): Either 'same' or 'diff'.
-
-    Returns:
-        np.ndarray: A 1D target signal array of shape (T,).
-    """
-    T = settings['T']
-    stim_on = settings['stim_on']
-    stim_dur = settings['stim_dur']
-    delay = settings['delay']
-
-    # Calculate the time when the second stimulus presentation ends
-    task_end_T = stim_on + (2 * stim_dur) + delay
-
-    # Initialize the target signal array with shape (1, T)
-    z = np.zeros((1, T))
-
-    # Define the target window: starts 10 steps after the task ends and lasts for 100 steps
-    target_onset = 10 + task_end_T
-    target_offset = target_onset + 100
-
-    # Assign the target value based on the label
-    if label == 'same':
-        z[0, target_onset:target_offset] = 1
-    elif label == 'diff':
-        z[0, target_onset:target_offset] = -1
-
-    return np.squeeze(z)
-
-
-def generate_target_continuous_mante(settings: Dict[str, Any], label: int) -> np.ndarray:
-    """
-    Generate the target output signal for the sensory integration task.
-
-    Args:
-        settings (Dict[str, Any]): Dictionary containing task parameters.
-        label (int): Either +1 or -1, the correct decision.
-
-    Returns:
-        np.ndarray: A 1D target signal array of shape (T,).
-    """
-    T = settings['T']
-    stim_on = settings['stim_on']
-    stim_dur = settings['stim_dur']
-
-    # Initialize the target signal array with shape (1, T)
-    z = np.zeros((1, T))
-    
-    # Calculate the target onset time dynamically
-    target_onset = stim_on + stim_dur
-
-    # Assign the target value from the onset time to the end of the trial
-    if label == 1:
-        z[0, target_onset:] = 1
-    else:
-        z[0, target_onset:] = -1
-
-    # Squeeze the array to shape (T,) to match the original's output
-    return np.squeeze(z)
-
-def loss_op(o: List[torch.Tensor], z: np.ndarray, training_params: Dict[str, Any]) -> torch.Tensor:
+def loss_op(o: List[torch.Tensor], z: Union[np.ndarray, torch.Tensor], training_params: Dict[str, Any]) -> torch.Tensor:
     """
     Define loss function for training.
 
     Args:
         o (List[torch.Tensor]): List of output values from the network.
-        z (np.ndarray): Target values.
+        z (Union[np.ndarray, torch.Tensor]): Target values.
         training_params (Dict[str, Any]): Dictionary containing training parameters 
                                          including 'loss_fn' key.
 
@@ -617,17 +385,20 @@ def loss_op(o: List[torch.Tensor], z: np.ndarray, training_params: Dict[str, Any
         torch.Tensor: Loss function value.
     """
     # Loss function
-    loss = torch.tensor(0.0, requires_grad=True)
+    loss = torch.tensor(0.0, device=o[0].device)
     loss_fn = training_params['loss_fn']
-    
-    z_tensor = torch.tensor(z, dtype=torch.float32, device=o[0].device)
-    
+
+    if isinstance(z, np.ndarray):
+        z_tensor = torch.tensor(z, dtype=torch.float32, device=o[0].device)
+    else:
+        z_tensor = z.to(device=o[0].device)
+
     for i in range(len(o)):
-        if loss_fn.lower() == 'l1': # mean absolute error (MAE)
+        if loss_fn.lower() == 'l1':  # mean absolute error (MAE)
             loss = loss + torch.norm(o[i].squeeze() - z_tensor[i], p=1)
-        elif loss_fn.lower() == 'l2': # root mean squared error (RMSE)
-            loss = loss + (o[i].squeeze() - z_tensor[i])**2
-    
+        elif loss_fn.lower() == 'l2':  # root mean squared error (RMSE)
+            loss = loss + (o[i].squeeze() - z_tensor[i]) ** 2
+
     if loss_fn.lower() == 'l2':
         loss = torch.sqrt(loss)
 
@@ -656,15 +427,12 @@ def eval_rnn(net: FR_RNN_dale, settings: Dict[str, Any], u: np.ndarray,
     
     net.eval()
     with torch.no_grad():
-        # Convert input to tensor
         u_tensor = torch.tensor(u, dtype=torch.float32, device=device)
         
-        # Initialize
         x = []
         r = []
         x.append(torch.randn(net.N, 1, device=device) / 100)
-        r.append(torch.sigmoid(x[0]))  # Default to sigmoid
-        
+        r.append(torch.sigmoid(x[0])) 
         o = []
         
         for t in range(1, T):
@@ -687,7 +455,7 @@ def eval_rnn(net: FR_RNN_dale, settings: Dict[str, Any], u: np.ndarray,
                     torch.randn(net.N, 1, device=device) / 10
             
             x.append(next_x)
-            r.append(torch.sigmoid(next_x))  # Default to sigmoid
+            r.append(torch.sigmoid(next_x))
             
             next_o = torch.matmul(net.w_out, r[t]) + net.b_out
             o.append(next_o.item())

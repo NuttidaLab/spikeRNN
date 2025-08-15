@@ -36,8 +36,9 @@ net = FR_RNN_dale(config.N, config.P_inh, config.P_rec, w_in,
 
 # Generate task stimuli
 settings = {'T': 200, 'stim_on': 50, 'stim_dur': 25, 'DeltaT': 1}
-stim, label = generate_input_stim_go_nogo(settings)
-target = generate_target_continuous_go_nogo(settings, label)
+task = GoNogoTask(settings)
+stim, label = task.generate_stimulus()
+target = task.generate_target(label)
 
 # Display network info
 net.display()
@@ -51,14 +52,16 @@ References:
 
 from .model import (
     FR_RNN_dale,
-    generate_input_stim_go_nogo,
-    generate_input_stim_xor, 
-    generate_input_stim_mante,
-    generate_target_continuous_go_nogo,
-    generate_target_continuous_xor,
-    generate_target_continuous_mante,
     loss_op,
     eval_rnn
+)
+
+from .tasks import (
+    AbstractTask,
+    GoNogoTask,
+    XORTask,
+    ManteTask,
+    TaskFactory
 )
 
 from .utils import (
@@ -68,10 +71,6 @@ from .utils import (
 )
 
 from .abstract import (
-    AbstractRateRNN,
-    AbstractTaskGenerator,
-    AbstractTargetGenerator,
-    AbstractLossFunction,
     RNNConfig,
     RateRNNFactory,
     validate_config,
@@ -86,15 +85,12 @@ __all__ = [
     # Main RNN class
     "FR_RNN_dale",
     
-    # Task stimulus generators
-    "generate_input_stim_go_nogo",
-    "generate_input_stim_xor", 
-    "generate_input_stim_mante",
-    
-    # Target generators
-    "generate_target_continuous_go_nogo",
-    "generate_target_continuous_xor",
-    "generate_target_continuous_mante",
+    # Task classes (new architecture)
+    "AbstractTask",
+    "GoNogoTask",
+    "XORTask", 
+    "ManteTask",
+    "TaskFactory",
     
     # Training utilities
     "loss_op",

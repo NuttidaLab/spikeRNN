@@ -103,7 +103,8 @@ def evaluate_single_trial(args):
             label = np.prod(u_lab)
             stims = {'mode': 'none'}
             _, _, _, _, _, out, _ = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)
-            if (label == 1 and np.max(out[20000:]) > 0.7) or (label == -1 and np.min(out[20000:]) < -0.7):
+            
+            if (label == 1 and np.max(out[0, 20000:]) > 0.7) or (label == -1 and np.min(out[0, 20000:]) < -0.7):
                 return 1
             return 0
 
@@ -130,7 +131,7 @@ def lambda_grid_search(model_dir, task_name, n_trials, scaling_factors):
 
         for mat_file in mat_files:
             curr_full = os.path.join(model_dir, mat_file)
-            print(f"Analyzing {mat_file}")
+            print(f"Analyzing {mat_file} for {task_name} task")
 
             model_data = sio.loadmat(curr_full)
             # if 'opt_scaling_factor' in model_data:

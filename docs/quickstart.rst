@@ -56,7 +56,7 @@ This script will use the optimal scaling factor found in the previous step and g
 
 .. code-block:: bash
 
-   python -m spiking.eval_go_nogo \
+   python -m spiking.eval_tasks --task go_nogo \
         --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0
 
 
@@ -70,7 +70,7 @@ Go-NoGo Task
 
 Training: ``... --task go-nogo ...``
 
-Evaluation: ``python -m spiking.eval_go_nogo --model_dir ...``
+Evaluation: ``python -m spiking.eval_tasks --task go_nogo --model_dir ...``
 
 
 XOR Task
@@ -78,7 +78,7 @@ XOR Task
 
 Training: ``... --task xor ...``
 
-Evaluation: TBD
+Evaluation: ``python -m spiking.eval_tasks --task xor --model_dir ...``
 
 
 Mante Task
@@ -86,7 +86,7 @@ Mante Task
 
 Training: ``... --task mante ...``
 
-Evaluation: TBD
+Evaluation: ``python -m spiking.eval_tasks --task mante --model_dir ...``
 
 
 Model File Requirements

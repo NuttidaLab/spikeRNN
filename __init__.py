@@ -42,7 +42,11 @@ from . import spiking
 from .rate import (
     FR_RNN_dale,
     create_default_config as create_rate_config,
-    set_gpu
+    set_gpu,
+    TaskFactory,
+    GoNogoTask,
+    XORTask,
+    ManteTask
 )
 
 # Convenience imports from spiking package
@@ -50,7 +54,10 @@ from .spiking import (
     LIF_network_fnc,
     create_default_spiking_config,
     lambda_grid_search,
-    eval_go_nogo
+    SpikingTaskFactory,
+    GoNogoSpikingTask,
+    XORSpikingTask,
+    ManteSpikingTask
 )
 
 def check_packages():
@@ -69,11 +76,22 @@ __all__ = [
     "create_rate_config", 
     "set_gpu",
     
+    # Task-based architecture (rate)
+    "TaskFactory",
+    "GoNogoTask",
+    "XORTask", 
+    "ManteTask",
+    
     # Spiking RNN essentials
     "LIF_network_fnc",
     "create_default_spiking_config",
     "lambda_grid_search",
-    "eval_go_nogo",
+    
+    # Task-based architecture (spiking)
+    "SpikingTaskFactory",
+    "GoNogoSpikingTask",
+    "XORSpikingTask",
+    "ManteSpikingTask",
     
     # Subpackages
     "rate",

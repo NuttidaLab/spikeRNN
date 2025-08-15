@@ -56,8 +56,7 @@ def load_rate_model(model_path: str) -> Dict[str, Any]:
         
     except Exception as e:
         raise ValueError(f"Failed to load model from {model_path}: {str(e)}")
-
-
+    
 def create_connectivity_masks(N: int, P_inh: float = 0.2, som_N: int = 0, 
                             apply_dale: bool = True, seed: Optional[int] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
