@@ -29,7 +29,7 @@ pip install -e .
 ```python
 import torch
 from rate import FR_RNN_dale, set_gpu, create_default_config
-from rate.model import generate_input_stim_go_nogo, generate_target_continuous_go_nogo
+from rate import TaskFactory
 
 # Setup
 device = set_gpu('0', 0.4)
@@ -44,9 +44,8 @@ net = FR_RNN_dale(200, 0.2, 0.2, w_in, som_N=0, w_dist='gaus',
 # Generate task data
 settings = {'T': 200, 'stim_on': 50, 'stim_dur': 25, 'DeltaT': 1, 
            'taus': [10], 'task': 'go-nogo'}
-u, label = generate_input_stim_go_nogo(settings)
-target = generate_target_continuous_go_nogo(settings, label)
-
+GoNogoTask = TaskFactory.create_task('go_nogo', settings)
+u, target, label = GoNogoTask.simulate_trial()
 # Forward pass
 u_tensor = torch.tensor(u, dtype=torch.float32, device=device)
 training_params = {'activation': 'sigmoid', 'P_rec': 0.2}
@@ -109,13 +108,7 @@ The trained PyTorch model will be saved as a `.pth` file, and the parameters wil
 - `FR_RNN_dale`: Main firing-rate RNN class with Dale's principle
 - `RNNConfig`: Configuration dataclass for network parameters
 - `AbstractRateRNN`: Base class for extending RNN implementations
-
-### Task Functions
-
-- `generate_input_stim_go_nogo()`: Generate Go-NoGo task stimuli
-- `generate_input_stim_xor()`: Generate XOR task stimuli  
-- `generate_input_stim_mante()`: Generate Mante task stimuli
-- `generate_target_continuous_*()`: Generate target signals for each task
+- `AbstractTask`: Base class for rate-based tasks
 
 ### Utilities
 
