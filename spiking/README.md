@@ -59,7 +59,7 @@ print(f"Network output: {out[-1]:.4f}")
 from spiking import lambda_grid_search
 
 # Find optimal scaling factor for your model
-lambda_grid_search(
+opt_scaling_factor = lambda_grid_search(
     model_path='models/go-nogo/model.mat',
     n_trials=50,
     scaling_range=(20, 80),
@@ -70,10 +70,15 @@ lambda_grid_search(
 ### Performance Evaluation
 
 ```python
-from spiking import eval_go_nogo
+from spiking.eval_tasks import evaluate_task
 
 # Evaluate spiking network performance
-eval_go_nogo(model_path='models/go-nogo/model.mat')
+performance = evaluate_task(
+    task_name='go_nogo',           # or 'xor', 'mante', custom tasks
+    model_dir='models/go-nogo/',
+    n_trials=100,
+    save_plots=True
+)
 ```
 
 ## Core Functions
@@ -104,21 +109,21 @@ Main function for rate-to-spike conversion and simulation.
 Grid search optimization for finding optimal scaling factors.
 
 **Parameters:**
-- `model_path`: Path to rate model (.mat file)
-- `scaling_range`: Range of scaling factors to test
-- `n_trials_per_factor`: Trials per scaling factor
-- `task_type`: Task type ('go-nogo', 'xor', 'mante')
-- `parallel`: Enable parallel processing
+- `model_dir`: Path to rate model directory
+- `task_name`: Task name ('go-nogo', 'xor', 'mante')
+- `n_trials`: Number of evaluation trials per scaling factor
+- `scaling_factors`: Range of scaling factors to test
 
-### eval_go_nogo()
 
-Evaluate Go-NoGo task performance with visualization.
+### evaluate_task()
+
+Evaluate task performance with visualization.
 
 **Parameters:**
-- `model_path`: Path to trained model (.mat file)
-- `scaling_factor`: Scaling factor (if known)
+- `task_name`: Task name ('go-nogo', 'xor', 'mante')
+- `model_dir`: Path to rate model directory
 - `n_trials`: Number of evaluation trials
-- `plot_results`: Generate visualization plots
+- `save_plots`: Whether to save the visualization plots (True or False)
 
 ## Supported Model Format
 
@@ -145,28 +150,9 @@ model_data = {
 }
 ```
 
-### Loading Models
-
-```python
-from spiking import load_rate_model
-
-# Load .mat model
-model_data = load_rate_model('trained/model/path.mat')
-
-# Validate required parameters
-required_keys = ['w', 'w_in', 'w_out', 'N', 'inh', 'exc', 'taus']
-missing = [k for k in required_keys if k not in model_data]
-if missing:
-    print(f"Warning: Missing parameters {missing}")
-```
-
 ## Scaling Factor Guidelines
 
 The scaling factor controls the rate-to-spike conversion intensity:
-
-- **Low values (20-40)**: Sparse spiking, may lose information
-- **Medium values (40-60)**: Balanced spiking, good performance  
-- **High values (60-100)**: Dense spiking, may introduce noise
 
 **Recommendations:**
 - Start with 50.0 for initial testing
@@ -178,7 +164,7 @@ The scaling factor controls the rate-to-spike conversion intensity:
 ### Basic Spike Statistics
 
 ```python
-from spiking import format_spike_data
+from spiking.utils import format_spike_data
 
 # Analyze spike trains
 spike_data = format_spike_data(spk, dt=0.00005)
@@ -250,29 +236,6 @@ Context-dependent sensory integration:
 # Context 2: integrate color coherence  
 ```
 
-## Performance Metrics
-
-### Conversion Quality
-
-- **Spike Rate**: Total spikes per second
-- **Firing Rate Distribution**: Per-neuron firing rates
-- **Output Correlation**: Similarity to rate model output
-- **Task Accuracy**: Performance on cognitive task
-
-### Task-Specific Metrics
-
-**Go-NoGo:**
-- Go trial accuracy (correct responses)
-- NoGo trial accuracy (correct inhibition)
-- Response time distribution
-
-**XOR:**
-- Logic accuracy for all input combinations
-- Temporal precision of output
-
-**Mante:**
-- Context-dependent accuracy
-- Sensory integration performance
 
 ## Integration with Rate Package
 
@@ -282,7 +245,7 @@ Step 1: Train a rate RNN model (from rate package)
 
 Step 2: Optimize the scaling factor
 
-Run the following script from the spikeRNN directory:
+Run the following script from the ``spikeRNN`` directory:
 
 ```bash
 python -m spiking.lambda_grid_search \
@@ -307,7 +270,7 @@ W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(
 
 - `LIF_network_fnc()`: Rate-to-spike conversion and simulation
 - `lambda_grid_search()`: Scaling factor optimization  
-- `eval_go_nogo()`: Go-NoGo task evaluation
+- `evaluate_task()`: Task evaluation
 
 ### Utility Functions
 
@@ -321,6 +284,7 @@ W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(
 - `SpikingConfig`: Configuration dataclass
 - `create_default_spiking_config()`: Default configuration
 - `AbstractSpikingRNN`: Base class for extensions
+- `AbstractSpikingTask`: Base class for spiking RNN evaluation
 
 ## Links
 
