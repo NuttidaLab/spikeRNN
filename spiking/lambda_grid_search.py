@@ -32,6 +32,15 @@ def _init_worker():
     torch.set_num_threads(1)  # Prevent thread contention
 
 def evaluate_single_trial(args):
+    """
+    Evaluate a single trial for a given task.
+
+    Args:
+        args (tuple): Tuple containing the current full path, scaling factor, task name, use initial weights, and down sample.
+
+    Returns:
+        int: 1 if the trial is successful, 0 otherwise.
+    """
     curr_full, scaling_factor, task_name, use_initial_weights, down_sample = args
     
     from spiking.LIF_network_fnc import LIF_network_fnc
