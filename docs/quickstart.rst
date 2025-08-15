@@ -32,7 +32,7 @@ Train a rate-based recurrent neural network on the Go-NoGo task. The following c
 
 
 Step 2: Optimize Scaling Factor and Convert to Spiking Network
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Next, find the optimal scaling factor (lambda) to convert the trained rate model into a spiking LIF network. This is a crucial step for maintaining task performance.
 
@@ -49,7 +49,7 @@ This script will test a range of scaling factors and save the best one to the `.
         
 
 Step 3: Analyze and Evaluate the Spiking Network
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, evaluate the performance of the converted spiking network on the Go-NoGo task. 
 This script will use the optimal scaling factor found in the previous step and generate plots comparing the network output and showing spike rasters
@@ -66,7 +66,7 @@ Working with Different Tasks
 You can train and evaluate the network on different tasks by changing the --task argument.
 
 Go-NoGo Task
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Training: ``... --task go-nogo ...``
 
@@ -74,7 +74,7 @@ Evaluation: ``python -m spiking.eval_tasks --task go_nogo --model_dir ...``
 
 
 XOR Task
-~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Training: ``... --task xor ...``
 
@@ -82,7 +82,7 @@ Evaluation: ``python -m spiking.eval_tasks --task xor --model_dir ...``
 
 
 Mante Task
-~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Training: ``... --task mante ...``
 

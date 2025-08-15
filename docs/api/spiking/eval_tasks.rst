@@ -1,12 +1,12 @@
 Evaluation Tasks
-=======================
+================================================================================
 
 .. currentmodule:: spiking.eval_tasks
 
 The eval_tasks module provides a unified, extensible evaluation interface for spiking neural networks on cognitive tasks.
 
 Core Functions
---------------
+----------------------------------------------------------------------------------
 
 .. autofunction:: evaluate_task
 
@@ -15,14 +15,14 @@ Core Functions
 .. autofunction:: main
 
 Adapter Classes
----------------
+----------------------------------------------------------------------------------
 
 .. autoclass:: LIFNetworkAdapter
    :members:
    :show-inheritance:
 
 Overview
---------
+----------------------------------------------------------------------------------
 
 The eval_tasks module provides a high-level evaluation interface that standardizes the process of evaluating trained spiking RNN models across different cognitive tasks. The system is designed to be fully extensible, automatically supporting any task registered with the ``SpikingTaskFactory``.
 
@@ -44,7 +44,7 @@ The framework provides three levels of evaluation:
 3. **Command-Line Interface**: Batch processing (``python -m spiking.eval_tasks``)
 
 Usage Examples
---------------
+----------------------------------------------------------------------------------
 
 **High-Level Evaluation:**
 
@@ -103,7 +103,7 @@ Usage Examples
     )
 
 Command-Line Arguments
----------------------
+----------------------------------------------------------------------------------
 
 .. program:: eval_tasks
 
@@ -140,7 +140,7 @@ Command-Line Arguments
    Stimulus duration - overrides task default.
 
 Implementation Details
----------------------
+----------------------------------------------------------------------------------
 
 **Model Loading:**
 

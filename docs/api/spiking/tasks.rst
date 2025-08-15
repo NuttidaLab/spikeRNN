@@ -1,12 +1,12 @@
 Tasks
-====================
+================================================================================
 
 .. currentmodule:: spiking.tasks
 
 The tasks module provides the task-based architecture for spiking RNNs, enabling evaluation of spiking neural networks on cognitive tasks.
 
 Core Classes
-------------
+----------------------------------------------------------------------------------
 
 .. autoclass:: AbstractSpikingTask
    :members:
@@ -25,14 +25,14 @@ Core Classes
    :show-inheritance:
 
 Factory Classes
----------------
+----------------------------------------------------------------------------------
 
 .. autoclass:: SpikingTaskFactory
    :members:
    :show-inheritance:
 
 Overview
---------
+----------------------------------------------------------------------------------
 
 The spiking tasks module provides specialized task implementations for evaluating spiking neural networks. These tasks extend the rate-based task framework with spiking-specific evaluation capabilities.
 
@@ -58,7 +58,7 @@ The spiking tasks module provides specialized task implementations for evaluatin
 * **Mante**: Context-dependent decision making evaluation
 
 Example Usage
--------------
+----------------------------------------------------------------------------------
 
 .. code-block:: python
 
@@ -84,7 +84,7 @@ Example Usage
     )
 
 Custom Spiking Task Creation
----------------------------
+----------------------------------------------------------------------------------
 
 .. code-block:: python
 
@@ -112,7 +112,7 @@ Custom Spiking Task Creation
     # python -m spiking.eval_tasks --task my_custom --model_dir models/custom/
 
 Integration with eval_tasks.py
------------------------------
+----------------------------------------------------------------------------------
 
 The tasks module is fully integrated with the evaluation system:
 

@@ -1,12 +1,12 @@
 Tasks
-====================
+================================================================================
 
 .. currentmodule:: rate.tasks
 
 The tasks module provides the task-based architecture for rate RNNs, separating cognitive tasks from neural network models.
 
 Core Classes
-------------
+----------------------------------------------------------------------------------
 
 .. autoclass:: AbstractTask
    :members:
@@ -25,14 +25,14 @@ Core Classes
    :show-inheritance:
 
 Factory Classes
----------------
+----------------------------------------------------------------------------------
 
 .. autoclass:: TaskFactory
    :members:
    :show-inheritance:
 
 Overview
---------
+----------------------------------------------------------------------------------
 
 The tasks module implements a modern task-based architecture that separates cognitive task logic from neural network implementations. This design promotes modularity, extensibility, and code reuse.
 
@@ -57,7 +57,7 @@ The tasks module implements a modern task-based architecture that separates cogn
 * **Mante**: Context-dependent sensory integration task
 
 Example Usage
--------------
+----------------------------------------------------------------------------------
 
 .. code-block:: python
 
@@ -79,7 +79,7 @@ Example Usage
     stimulus, target, label = task.simulate_trial()
 
 Custom Task Creation
--------------------
+----------------------------------------------------------------------------------
 
 .. code-block:: python
 
