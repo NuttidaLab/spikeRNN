@@ -270,8 +270,8 @@ API Reference
 
 For detailed API documentation, see:
 
-* :doc:`api/rate/tasks`
-* :doc:`api/spiking/tasks`
+* Rate RNN: :doc:`api/rate/tasks`
+* Spiking RNN: :doc:`api/spiking/tasks`
 
 Examples
 --------
