@@ -104,8 +104,9 @@ The Go-NoGo task trains the network to respond to "Go" stimuli and withhold resp
         optimizer.zero_grad()
         
         # Generate task data
-        u, label = generate_input_stim_go_nogo(settings)
-        target = generate_target_continuous_go_nogo(settings, label)
+        task = TaskFactory.create_task('go_nogo', settings)
+        u, label = task.generate_input_stim(settings)
+        target = task.generate_target_continuous(settings, label)
         u_tensor = torch.tensor(u, dtype=torch.float32, device=device)
         
         # Forward pass
@@ -142,9 +143,9 @@ The XOR task requires temporal working memory to compute XOR of two sequential i
     # Training loop
     for tr in range(n_trials):
         optimizer.zero_grad()
-        generate_input_stim_xor
-        u, label = (settings)
-        target = generate_target_continuous_xor(settings, label)
+        task = TaskFactory.create_task('xor', settings)
+        u, label = task.generate_input_stim(settings)
+        target = task.generate_target_continuous(settings, label)
         u_tensor = torch.tensor(u, dtype=torch.float32, device=device)
         
         outputs = net.forward(u_tensor, settings['taus'], training_params, settings)
