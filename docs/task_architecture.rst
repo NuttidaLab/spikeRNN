@@ -4,12 +4,12 @@ Task-Based Architecture
 Overview
 --------
 
-Starting with version 0.1.0, spikeRNN introduces a new modular task-based architecture that separates cognitive tasks from neural network models. This design makes the framework more extensible, maintainable, and easier to use.
+spikeRNN introduces a modular task-based architecture that separates cognitive tasks from neural network models. This design makes the framework more extensible, maintainable, and easier to use.
 
 Key Benefits
 ------------
 
-* **Separation of Concerns**: Tasks and models are now separate entities
+* **Separation of Concerns**: Tasks and models are separate entities
 * **Easy Extensibility**: Add new tasks without modifying core model code
 * **Consistent Interface**: All tasks follow the same abstract interface
 * **Factory Pattern**: Dynamic task creation and discovery
