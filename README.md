@@ -7,15 +7,6 @@ The SpikeRNN framework consists of two complementary packages with a modern **ta
 - **[rate](rate/)**: Continuous-variable rate RNN package for training models on cognitive tasks
 - **[spiking](spiking/)**: Spiking RNN package for converting rate models to biologically realistic networks
 
-## ✨ Task-Based Architecture
-
-The framework now features a modular task-based design that separates cognitive tasks from neural network models:
-
-- **Separation of Concerns**: Tasks and models are independent entities
-- **Easy Extensibility**: Add new tasks without modifying core model code
-- **Consistent Interface**: All tasks follow the same abstract interface
-- **Factory Pattern**: Dynamic task creation and discovery
-
 ## Features
 
 ### Rate RNN Package
@@ -30,6 +21,14 @@ The framework now features a modular task-based design that separates cognitive 
 - Spiking task evaluation classes (GoNogoSpikingTask, XORSpikingTask, ManteSpikingTask)
 - SpikingTaskFactory for task-based evaluation
 - Scaling factor optimization for optimal conversion
+
+## Task-Based Architecture
+
+The framework features a modular task-based design that separates cognitive tasks from models:
+
+- **Easy Extensibility**: Add new tasks without modifying core model code
+- **Consistent Interface**: All tasks follow the same abstract interface
+- **Factory Pattern**: Dynamic task creation and discovery
 
 ## Installation
 
