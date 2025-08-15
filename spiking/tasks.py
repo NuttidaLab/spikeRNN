@@ -679,12 +679,12 @@ class SpikingTaskFactory:
     }
     
     @classmethod
-    def create_task(cls, task_type: str, settings: Optional[Dict[str, Any]] = None) -> AbstractSpikingTask:
+    def create_task(cls, task_name: str, settings: Optional[Dict[str, Any]] = None) -> AbstractSpikingTask:
         """
         Create a spiking task instance by type.
         
         Args:
-            task_type (str): Type of task ('go_nogo', 'xor', 'mante').
+            task_name (str): Name of task ('go_nogo', 'xor', 'mante').
             settings (Optional[Dict[str, Any]]): Task settings.
             
         Returns:
@@ -693,11 +693,11 @@ class SpikingTaskFactory:
         Raises:
             ValueError: If task type is not recognized.
         """
-        if task_type not in cls._registry:
+        if task_name not in cls._registry:
             available = list(cls._registry.keys())
-            raise ValueError(f"Task type '{task_type}' not found. Available types: {available}")
+            raise ValueError(f"Task type '{task_name}' not found. Available types: {available}")
         
-        task_class = cls._registry[task_type]
+        task_class = cls._registry[task_name]
         return task_class(settings)
     
     @classmethod
