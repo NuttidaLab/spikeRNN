@@ -70,8 +70,8 @@ The Go-NoGo task trains the network to respond to "Go" stimuli and withhold resp
     import torch
     import torch.optim as optim
     from rate import FR_RNN_dale, set_gpu
-    from rate.model import (generate_input_stim_go_nogo, 
-                           generate_target_continuous_go_nogo, loss_op)
+    from rate.model import loss_op
+    from rate.tasks import TaskFactory
     
     # Setup
     device = set_gpu('0', 0.4)
@@ -105,8 +105,7 @@ The Go-NoGo task trains the network to respond to "Go" stimuli and withhold resp
         
         # Generate task data
         task = TaskFactory.create_task('go_nogo', settings)
-        u, label = task.generate_input_stim(settings)
-        target = task.generate_target_continuous(settings, label)
+        u, target, label = task.simulate_trial()
         u_tensor = torch.tensor(u, dtype=torch.float32, device=device)
         
         # Forward pass
@@ -144,8 +143,7 @@ The XOR task requires temporal working memory to compute XOR of two sequential i
     for tr in range(n_trials):
         optimizer.zero_grad()
         task = TaskFactory.create_task('xor', settings)
-        u, label = task.generate_input_stim(settings)
-        target = task.generate_target_continuous(settings, label)
+        u, target, label = task.simulate_trial()
         u_tensor = torch.tensor(u, dtype=torch.float32, device=device)
         
         outputs = net.forward(u_tensor, settings['taus'], training_params, settings)

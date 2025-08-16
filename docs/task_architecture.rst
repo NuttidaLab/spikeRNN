@@ -9,7 +9,6 @@ spikeRNN introduces a modular task-based architecture that separates cognitive t
 Key Benefits
 ------------
 
-* **Separation of Concerns**: Tasks and models are separate entities
 * **Easy Extensibility**: Add new tasks without modifying core model code
 * **Consistent Interface**: All tasks follow the same abstract interface
 * **Factory Pattern**: Dynamic task creation and discovery
@@ -81,9 +80,14 @@ There are two levels of evaluation available:
     # Create spiking task and network instances
     task = SpikingTaskFactory.create_task('go_nogo')
     spiking_rnn = MySpikingNetwork()  # Your network instance
+
+    # Evaluate a single trial
+    stimulus, label = task.generate_stimulus()
+    performance = task.evaluate_trial(spiking_rnn, stimulus, label)
+    print(f"Accuracy: {performance['correct']:.2f}")
     
     # Evaluate performance over multiple trials
-    performance = task.evaluate_performance(spiking_rnn, n_trials=100)
+    performance = task.evaluate_performance(spiking_rnn, n_trials=10)
     print(f"Accuracy: {performance['overall_accuracy']:.2f}")
 
 **Complete evaluation workflow (when you have a model file (with trained weights))**
@@ -96,7 +100,6 @@ There are two levels of evaluation available:
     performance = evaluate_task(
         task_name='go_nogo',
         model_dir='models/go-nogo',
-        n_trials=100,
         save_plots=True
     )
     print(f"Accuracy: {performance['overall_accuracy']:.2f}")
@@ -107,7 +110,7 @@ There are two levels of evaluation available:
 
     # Evaluate any task from command line
     python -m spiking.eval_tasks --task go_nogo --model_dir models/go-nogo/
-    python -m spiking.eval_tasks --task xor --model_dir models/xor/ --n_trials 50
+    python -m spiking.eval_tasks --task xor --model_dir models/xor/
 
 Factory Pattern Usage
 ~~~~~~~~~~~~~~~~~~~~~
@@ -258,7 +261,6 @@ Once registered, your custom task works with the evaluation system:
     performance = evaluate_task(
         task_name='my_custom',
         model_dir='models/custom/',
-        n_trials=100
     )
 
 **3. Visualization Support**
@@ -278,7 +280,4 @@ Examples
 
 Complete examples can be found in:
 
-* ``examples/task_based_usage.py`` - Comprehensive demonstration
-* :doc:`examples` - Additional usage examples
-* :doc:`tutorials` - Step-by-step tutorials
 * :doc:`tasks` - Task creation and customization tutorials

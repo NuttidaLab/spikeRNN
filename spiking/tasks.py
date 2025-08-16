@@ -454,7 +454,7 @@ class XORSpikingTask(AbstractSpikingTask):
         }
     
     def evaluate_performance(self, spiking_rnn: AbstractSpikingRNN, 
-                           n_trials: int = 100) -> Dict[str, float]:
+                           n_trials: int = 1) -> Dict[str, float]:
         """
         Evaluate performance over multiple XOR trials.
         

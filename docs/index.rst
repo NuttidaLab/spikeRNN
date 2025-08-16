@@ -8,11 +8,10 @@ The framework provides two complementary packages with a modern task-based archi
 * **rate**: Continuous-variable Rate RNN package for training models on cognitive tasks.
 * **spiking**: Spiking RNN package for converting rate models to biologically realistic networks.
 
-**New in v0.1.0**: Task-based architecture that separates cognitive tasks from neural network models, making the framework more modular, extensible, and easier to use.
+**Tutorials**
 
-**Tutorials**: 
-* `tutorials <tutorials.html>`_ - Framework overview and basic usage
-* `tasks <tasks.html>`_ - Creating and customizing cognitive tasks
+* `spikeRNN Tutorials <tutorials.html>`_ - Framework overview and basic usage
+* `How to Create Different Tasks <tasks.html>`_ - Creating and customizing cognitive tasks
 
 
 .. toctree::
