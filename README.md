@@ -210,8 +210,7 @@ lambda_grid_search(
 # Evaluate performance
 performance = evaluate_task(
     task_name='go_nogo',
-    model_dir='models/go-nogo/',
-    n_trials=100
+    model_dir='models/go-nogo/'
 )
 ```
 
