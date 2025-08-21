@@ -56,7 +56,6 @@ Usage Examples
     performance = evaluate_task(
         task_name='go_nogo',           # or 'xor', 'mante', custom tasks
         model_dir='models/go-nogo/',
-        n_trials=100,
         save_plots=True
     )
     
@@ -73,7 +72,6 @@ Usage Examples
     python -m spiking.eval_tasks \
         --task xor \
         --model_dir models/xor/ \
-        --n_trials 200 \
         --scaling_factor 45.0 \
         --no_plots
     
@@ -99,7 +97,6 @@ Usage Examples
     performance = evaluate_task(
         task_name='working_memory',  # Now supported automatically
         model_dir='models/working_memory/',
-        n_trials=100
     )
 
 Command-Line Arguments
@@ -114,10 +111,6 @@ Command-Line Arguments
 .. option:: --model_dir MODEL_DIR
 
    Directory containing the trained model .mat file.
-
-.. option:: --n_trials N_TRIALS
-
-   Number of trials to evaluate (default: 100).
 
 .. option:: --scaling_factor SCALING_FACTOR
 
