@@ -26,7 +26,12 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
-def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_initial_weights):
+def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_initial_weights
+                    lesion_percentage: float = 0.0,
+                    lesion_scale: float = 0.0,
+                    lesion_by_type: bool = False,
+                    exclude_self_connections: bool = True,
+                    seed: int = None):
     """
     Convert a trained rate RNN to a spiking RNN (leaky integrate-and-fire).
     
@@ -41,8 +46,12 @@ def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_ini
       - downsample: downsample factor (1 => no downsampling, 2 => every other sample, etc...)
                     While downsample > 1 can speed up the conversion, the LIF network
                     might not be as robust as the one without downsampling
-      - use_initial_weights: whether to use w0 (random initial weights). This is mainly used
-                             for testing.
+      - use_initial_weights: whether to use w0 (random initial weights). This is mainly used for testing.
+      - lesion_percentage: fraction (0..1) of existing connections to attenuate
+      - lesion_scale: multiplicative factor applied to selected weights (0..1)
+      - lesion_by_type: if True, lesion equally within E-E, E-I, I-E, I-I
+      - exclude_self_connections: if True, do not lesion self-connections (i==j)
+      - seed: int for reproducible random selection
 
     Returns:
       - W: recurrent connectivity matrix scaled by the scaling factor (N x N)
@@ -101,6 +110,114 @@ def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_ini
 
     # Scale the connectivity weights by the optimal scaling factor 
     W = torch.tensor(w / scaling_factor, dtype=torch.float64, device=device)
+    
+    # Lesion helpers
+    def _rng(device, seed):
+        if seed is None:
+            return torch.Generator(device=device)
+        g = torch.Generator(device=device)
+        g.manual_seed(seed)
+        return g
+
+    def _apply_lesion_global(W: torch.Tensor,
+                             lesion_percentage: float,
+                             lesion_scale: float,
+                             exclude_self_connections: bool,
+                             generator: torch.Generator):
+        """
+        Applies a random lesion to the weight matrix by setting a
+        percentage of connections to zero.
+
+        Args:
+            lesion_percentage (float): Fraction of existing connections to attenuate (0.0 to 1.0).
+            lesion_scale (float): Multiplicative factor applied to selected weights (0.0 to 1.0).
+            exclude_self_connections (bool): If True, do not lesion self-connections (i==j).
+            generator (torch.Generator): Random number generator.
+        """
+        if lesion_percentage <= 0.0:
+            return W
+        if not (0.0 <= lesion_percentage <= 1.0):
+            raise ValueError("lesion_percentage must be in [0,1]")
+        if not (0.0 <= lesion_scale <= 1.0):
+            raise ValueError("lesion_scale must be in [0,1]")
+
+        with torch.no_grad():
+            mask_existing = (W != 0)
+            if exclude_self_connections:
+                diag = torch.eye(W.shape[0], dtype=torch.bool, device=W.device)
+                mask_existing = mask_existing & (~diag)
+            idx = torch.nonzero(mask_existing, as_tuple=False)
+            if idx.numel() == 0:
+                return W
+            num_to = int(lesion_percentage * idx.shape[0])
+            if num_to == 0:
+                return W
+            perm = torch.randperm(idx.shape[0], generator=generator, device=W.device)[:num_to]
+            chosen = idx[perm]
+            rows, cols = chosen[:, 0], chosen[:, 1]
+            W[rows, cols] = W[rows, cols] * lesion_scale
+        return W
+
+    def _apply_lesion_by_type(W: torch.Tensor,
+                              exc_np: np.ndarray,
+                              inh_np: np.ndarray,
+                              lesion_percentage: float,
+                              lesion_scale: float,
+                              exclude_self_connections: bool,
+                              generator: torch.Generator):
+        """
+        Applies a random lesion to the weight matrix by setting a percentage of connections to zero.
+
+        Args:
+            lesion_percentage (float): Fraction of existing connections to attenuate (0.0 to 1.0).
+            lesion_scale (float): Multiplicative factor applied to selected weights (0.0 to 1.0).
+            exclude_self_connections (bool): If True, do not lesion self-connections (i==j).
+            generator (torch.Generator): Random number generator.
+        """
+        if lesion_percentage <= 0.0:
+            return W
+        if not (0.0 <= lesion_percentage <= 1.0):
+            raise ValueError("lesion_percentage must be in [0,1]")
+        if not (0.0 <= lesion_scale <= 1.0):
+            raise ValueError("lesion_scale must be in [0,1]")
+
+        with torch.no_grad():
+            exc_t = torch.from_numpy(exc_np.astype(bool)).to(W.device)
+            inh_t = torch.from_numpy(inh_np.astype(bool)).to(W.device)
+
+            # rows = post, cols = pre
+            masks = {
+                "E_E": torch.outer(exc_t, exc_t),
+                "E_I": torch.outer(inh_t, exc_t),  # to I? careful: rows target; here E_I label means (to I, from E)? 
+                "I_E": torch.outer(exc_t, inh_t),
+                "I_I": torch.outer(inh_t, inh_t),
+            }
+
+            diag = torch.eye(W.shape[0], dtype=torch.bool, device=W.device) if exclude_self_connections else None
+
+            for _, conn_mask in masks.items():
+                mask_existing = (W != 0) & conn_mask
+                if exclude_self_connections:
+                    mask_existing = mask_existing & (~diag)
+                idx = torch.nonzero(mask_existing, as_tuple=False)
+                if idx.numel() == 0:
+                    continue
+                num_to = int(lesion_percentage * idx.shape[0])
+                if num_to == 0:
+                    continue
+                perm = torch.randperm(idx.shape[0], generator=generator, device=W.device)[:num_to]
+                chosen = idx[perm]
+                rows, cols = chosen[:, 0], chosen[:, 1]
+                W[rows, cols] = W[rows, cols] * lesion_scale
+        return W
+
+    # Apply lesion to W before simulation
+    if lesion_percentage > 0.0:
+        gen = _rng(device, seed)
+        if lesion_by_type:
+            W = _apply_lesion_by_type(W, exc, inh, lesion_percentage, lesion_scale, exclude_self_connections, gen)
+        else:
+            W = _apply_lesion_global(W, lesion_percentage, lesion_scale, exclude_self_connections, gen)
 
     # Inhibitory and excitatory neurons
     inh_ind = torch.where(torch.tensor(inh, device=device) == 1)[0]
