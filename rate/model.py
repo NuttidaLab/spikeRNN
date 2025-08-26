@@ -292,45 +292,55 @@ class FR_RNN_dale(nn.Module):
         
         return stim, x, r, o, self.w, self.w_in, self.mask, self.som_mask, self.w_out, self.b_out, taus_gaus
 
-    def lesion_w(self, lesion_percentage: float) -> None:
+    def lesion_w(self, lesion_percentage: float, lesion_scale: float = 0.0) -> None:
         """
         Applies lesions to the recurrent weight matrix by setting a
         percentage of connections to zero.
 
         Args:
-            lesion_percentage (float): The percentage of connections to remove (0.0 to 1.0).
+            lesion_percentage (float): Fraction of existing connections to attenuate (0.0 to 1.0).
+            lesion_scale (float): Multiplicative factor applied to selected weights (0.0 to 1.0).
         """
+        
+        if not 0.0 <= lesion_percentage <= 1.0:
+            raise ValueError("lesion_percentage must be between 0.0 and 1.0")
+        if not 0.0 <= lesion_scale <= 1.0:
+            raise ValueError("lesion_scale must be between 0.0 and 1.0")
+        
         with torch.no_grad():
-            # Clone the original weight tensor to avoid modifying it directly during iteration
             w_lesioned = self.w.clone()
 
-            # Get the indices of non-diagonal elements that are non-zero
-            non_diagonal_indices = torch.nonzero(self.w, as_tuple=False)
+            # Find indices of existing (non-zero) connections
+            existing = torch.nonzero(w_lesioned != 0, as_tuple=False)
+            if existing.numel() == 0:
+                return
 
-            # Calculate the number of connections to remove
-            num_to_lesion = int(lesion_percentage * len(non_diagonal_indices))
+            num_to_lesion = int(lesion_percentage * existing.shape[0])
+            if num_to_lesion == 0:
+                return
 
-            # Randomly select connections to lesion
-            lesion_indices = torch.randperm(len(non_diagonal_indices))[:num_to_lesion]
-            indices_to_zero = non_diagonal_indices[lesion_indices]
+            chosen = existing[torch.randperm(existing.shape[0], device=w_lesioned.device)[:num_to_lesion]]
+            rows, cols = chosen[:, 0], chosen[:, 1]
 
-            # Set the selected weights to zero
-            for index in indices_to_zero:
-                w_lesioned[index[0], index[1]] = 0
+            # Scale selected weights
+            w_lesioned[rows, cols] = w_lesioned[rows, cols] * lesion_scale
 
-            # Update the model's weight parameter
+            # Update parameter
             self.w.data = w_lesioned
     
-    def lesion_w_by_type(self, lesion_percentage: float) -> None:
+    def lesion_w_by_type(self, lesion_percentage: float, lesion_scale: float = 0.0) -> None:
         """
         Applies lesions by setting an equal percentage of existing connections
         to zero for each neuron type pairing (E-E, E-I, I-E, I-I).
 
         Args:
-            lesion_percentage (float): The percentage of connections to remove (0.0 to 1.0).
+            lesion_percentage (float): Fraction of existing connections (per type) to attenuate (0.0 to 1.0).
+            lesion_scale (float): Multiplicative factor applied to selected weights (0.0 to 1.0).
         """
         if not 0.0 <= lesion_percentage <= 1.0:
             raise ValueError("lesion_percentage must be between 0.0 and 1.0")
+        if not 0.0 <= lesion_scale <= 1.0:
+            raise ValueError("lesion_scale must be between 0.0 and 1.0")
 
         with torch.no_grad():
             w_lesioned = self.w.clone()
@@ -349,25 +359,22 @@ class FR_RNN_dale(nn.Module):
                 "I_I": torch.outer(inh_mask_t, inh_mask_t)  # To I (rows), From I (cols)
             }
             # Lesion each connection type separately
-            for conn_type, mask in connection_masks.items():
-                # Find the indices of existing (non-zero) connections for this type
-                indices = torch.nonzero(w_lesioned * mask, as_tuple=False)
+            for _, mask in connection_masks.items():
+                # Existing connections of this type
+                typed = torch.nonzero((w_lesioned != 0) & mask, as_tuple=False)
+                if typed.numel() == 0:
+                    continue
 
-                if len(indices) == 0:
-                    continue  # No connections of this type to lesion
+                num_to_lesion = int(lesion_percentage * typed.shape[0])
+                if num_to_lesion == 0:
+                    continue
 
-                # Calculate the number of connections to remove
-                num_to_lesion = int(lesion_percentage * len(indices))
+                chosen = typed[torch.randperm(typed.shape[0], device=w_lesioned.device)[:num_to_lesion]]
+                rows, cols = chosen[:, 0], chosen[:, 1]
 
-                if num_to_lesion > 0:
-                    # Randomly select connections to lesion
-                    lesion_indices_perm = torch.randperm(len(indices))[:num_to_lesion]
-                    indices_to_zero = indices[lesion_indices_perm]
+                # Scale selected weights
+                w_lesioned[rows, cols] = w_lesioned[rows, cols] * lesion_scale
 
-                    # Set the selected weights to zero
-                    w_lesioned[indices_to_zero[:, 0], indices_to_zero[:, 1]] = 0
-
-            # Update the model's weight parameter
             self.w.data = w_lesioned
 
 
