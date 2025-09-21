@@ -26,7 +26,7 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
-def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_initial_weights
+def LIF_network_fnc(model_or_path, scaling_factor, u, stims, downsample, use_initial_weights,
                     lesion_percentage: float = 0.0,
                     lesion_scale: float = 0.0,
                     lesion_by_type: bool = False,
