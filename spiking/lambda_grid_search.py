@@ -113,7 +113,7 @@ def evaluate_single_trial(args):
             stims = {'mode': 'none'}
             _, _, _, _, _, out, _ = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)
             
-            if (label == 1 and np.max(out[0, 20000:]) > 0.7) or (label == -1 and np.min(out[0, 20000:]) < -0.7):
+            if (label == 1 and np.max(out[20000:]) > 0.7) or (label == -1 and np.min(out[20000:]) < -0.7):
                 return 1
             return 0
 
@@ -204,8 +204,8 @@ if __name__ == "__main__":
     # Run the script with the following command:
     """
     python -m spiking.lambda_grid_search \
-        --model_dir "models/go-nogo/P_rec_0.2_Taus_4.0_20.0" \
-        --task_name go-nogo \
-        --n_trials 100 \
+        --model_dir "./eg/models/xor/P_rec_0.2_Taus_4.0_20.0" \
+        --task_name xor \
+        --n_trials 50 \
         --scaling_factors 20:76:5
     """
