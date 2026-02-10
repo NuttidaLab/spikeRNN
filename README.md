@@ -58,7 +58,7 @@ from spiking.tasks import GoNogoSpikingTask, XORSpikingTask, ManteSpikingTask
 ### Creating and Using Tasks
 
 ```python
-from spikeRNN import TaskFactory
+from rate import TaskFactory
 
 # Create task settings
 settings = {
