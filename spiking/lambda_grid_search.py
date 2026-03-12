@@ -6,6 +6,7 @@ import argparse
 import warnings
 import torch
 import multiprocessing
+from typing import Dict, Any, Optional
 multiprocessing.set_start_method('spawn', force=True)
 warnings.filterwarnings("ignore")
 
@@ -31,97 +32,63 @@ def _init_worker():
         torch.cuda.reset_peak_memory_stats()
     torch.set_num_threads(1)  # Prevent thread contention
 
-def evaluate_single_trial(args):
+def evaluate_single_trial(task_name: str, model_path: str, scaling_factor: float, 
+                          settings: Optional[Dict[str, Any]] = None) -> int:
     """
-    Evaluate a single trial for a given task.
-
+    Evaluate a single trial for a given task using the appropriate evaluator class.
+    
     Args:
-        args (tuple): Tuple containing the current full path, scaling factor, task name, use initial weights, and down sample.
-
+        task_name: Name of the task ('go_nogo', 'xor', 'mante')
+        model_path: Path to the model .mat file
+        scaling_factor: Scaling factor for the model
+        settings: Optional custom settings. If None, uses default settings.
+        
     Returns:
-        int: 1 if the trial is successful, 0 otherwise.
+        int: 1 if trial is correct, 0 if incorrect
     """
-    curr_full, scaling_factor, task_name, use_initial_weights, down_sample = args
+    from spiking.eval_tasks import SpikingEvaluatorFactory, _get_default_task_settings
     
-    from spiking.LIF_network_fnc import LIF_network_fnc
-    
-    model_data = sio.loadmat(curr_full)
-
     try:
-        if task_name == 'go-nogo':
-            u = np.zeros((1, 201))
-            trial_type = 0
-            if np.random.rand() >= 0.50:
-                u[0, 50:75] = 1.0
-                trial_type = 1
-            stims = {'mode': 'none'}
-            
-            W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)   
-            
-            max_output = np.max(out[10000:])
-            
-            if trial_type == 1:  # Go trial
-                success = max_output > 0.7
-            else:  # NoGo trial
-                success = max_output < 0.3
-            
-            return 1 if success else 0
-
-        elif task_name == 'mante':
-            u = np.zeros((4, 501))
-            u_lab = np.zeros(2)
-            if np.random.rand() >= 0.5:
-                u[0, 50:250] = np.random.randn(200) + 0.5
-                u_lab[0] = 1
-            else:
-                u[0, 50:250] = np.random.randn(200) - 0.5
-                u_lab[0] = -1
-            if np.random.rand() >= 0.5:
-                u[1, 50:250] = np.random.randn(200) + 0.5
-                u_lab[1] = 1
-            else:
-                u[1, 50:250] = np.random.randn(200) - 0.5
-                u_lab[1] = -1
-            if np.random.rand() >= 0.5:
-                u[2, :] = 1
-                label = u_lab[0]
-            else:
-                u[3, :] = 1
-                label = u_lab[1]
-            stims = {'mode': 'none'}
-            _, _, _, _, _, out, _ = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)
-            if (label == 1 and np.max(out[26000:]) > 0.7) or (label == -1 and np.min(out[26000:]) < -0.7):
-                return 1
-            return 0
-
-        elif task_name == 'xor':
-            u = np.zeros((2, 301))
-            u_lab = np.zeros(2)
-            if np.random.rand() >= 0.5:
-                u[0, 50:100] = 1
-                u_lab[0] = 1
-            else:
-                u[0, 50:100] = -1
-                u_lab[0] = -1
-            if np.random.rand() >= 0.5:
-                u[1, 110:160] = 1
-                u_lab[1] = 1
-            else:
-                u[1, 110:160] = -1
-                u_lab[1] = -1
-            label = np.prod(u_lab)
-            stims = {'mode': 'none'}
-            _, _, _, _, _, out, _ = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)
-            
-            if (label == 1 and np.max(out[20000:]) > 0.7) or (label == -1 and np.min(out[20000:]) < -0.7):
-                return 1
-            return 0
-
-    except:
+        task_name = task_name.replace('-', '_')
+        
+        # Use provided settings or get default settings for the task
+        if settings is None:
+            settings = _get_default_task_settings(task_name)
+        
+        # Create the appropriate evaluator using the factory
+        evaluator = SpikingEvaluatorFactory.create_evaluator(task_name, settings)
+        
+        # Use the evaluator's evaluate_single_trial method
+        return evaluator.evaluate_single_trial(model_path, scaling_factor)
+        
+    except Exception as e:
+        print(f"Error in evaluate_single_trial: {e}")
         return 0
 
 
-def lambda_grid_search(model_dir, task_name, n_trials, scaling_factors):
+def lambda_grid_search(model_path, task_name, n_trials, scaling_factors, 
+                       task_settings: Optional[Dict[str, Any]] = None):
+    """
+    Perform grid search over scaling factors for spiking network evaluation.
+    
+    Args:
+        model_path: Path to the trained model .mat file
+        task_name: Name of the task ('go-nogo', 'xor', 'mante')
+        n_trials: Number of trials to run for each scaling factor
+        scaling_factors: List of scaling factors to test
+        task_settings: Optional custom task settings. If None, uses default settings.
+                      Can include: T, stim_on, stim_dur, delay, eval_amp_thresh
+    
+    Returns:
+        Optimal scaling factor for the model
+    """
+    # Verify the file exists and is a .mat file
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found: {model_path}")
+    
+    if not model_path.endswith('.mat'):
+        raise ValueError(f"Expected a .mat file, got: {model_path}")
+    
     # Create pool with spawn context
     ctx = multiprocessing.get_context('spawn')
     pool = ctx.Pool(initializer=_init_worker)
@@ -133,53 +100,54 @@ def lambda_grid_search(model_dir, task_name, n_trials, scaling_factors):
         
         use_initial_weights = False
         down_sample = 1
-        mat_files = [f for f in os.listdir(model_dir) if f.endswith('.mat')]
+        mode = 'none'
 
-        if not mat_files:
-            raise FileNotFoundError(f"No .mat files found in directory: {model_dir}")
+        if not model_path.endswith('.mat'):
+            raise ValueError(f"Expected a .mat file, got: {model_path}")
 
-        for mat_file in mat_files:
-            curr_full = os.path.join(model_dir, mat_file)
-            print(f"Analyzing {mat_file} for {task_name} task")
+        model_data = sio.loadmat(model_path)
+        # if 'opt_scaling_factor' in model_data:
+        #     print("Already processed. Skipping.")
+        #     continue
+        # else:
+        #     model_data['opt_scaling_factor'] = np.nan
+        #     sio.savemat(model_path, model_data)
+        
+        model_data['opt_scaling_factor'] = np.nan
+        sio.savemat(model_path, model_data)
 
-            model_data = sio.loadmat(curr_full)
-            # if 'opt_scaling_factor' in model_data:
-            #     print("Already processed. Skipping.")
-            #     continue
-            # else:
-            #     model_data['opt_scaling_factor'] = np.nan
-            #     sio.savemat(curr_full, model_data)
+        all_perfs = np.zeros(len(scaling_factors))
+
+        # Convert task name format (go-nogo -> go_nogo)
+        task_name_normalized = task_name.replace('-', '_')
+
+        for k, scaling_factor in enumerate(scaling_factors):
+            print(f"Testing scaling factor: {scaling_factor}")
             
-            model_data['opt_scaling_factor'] = np.nan
-            sio.savemat(curr_full, model_data)
+            # Prepare arguments for starmap (each trial gets same arguments)
+            trial_args = [(task_name_normalized, model_path, scaling_factor, task_settings) for _ in range(n_trials)]
+            
+            # Run trials in parallel using multiprocessing
+            perfs = pool.starmap(evaluate_single_trial, trial_args)
+            all_perfs[k] = np.mean(perfs)
+            print(f"Performance for {scaling_factor}: {all_perfs[k]:.3f}")
 
-            all_perfs = np.zeros(len(scaling_factors))
+        best_idx = np.argmax(all_perfs)
+        opt_scaling_factor = scaling_factors[best_idx]
+        print(f"Best scaling factor: {opt_scaling_factor}")
 
-            for k, scaling_factor in enumerate(scaling_factors):
-                print(f"Testing scaling factor: {scaling_factor}")
-                trial_args = [(curr_full, scaling_factor, task_name, use_initial_weights, down_sample) for _ in range(n_trials)]
-                
-                perfs = pool.map(evaluate_single_trial, trial_args)
-                all_perfs[k] = np.mean(perfs)
-                print(f"Performance for {scaling_factor}: {all_perfs[k]:.3f}")
-
-            best_idx = np.argmax(all_perfs)
-            opt_scaling_factor = scaling_factors[best_idx]
-            print(f"Best scaling factor: {opt_scaling_factor}")
-
-            model_data = sio.loadmat(curr_full)
-            model_data['opt_scaling_factor'] = opt_scaling_factor
-            model_data['all_perfs'] = all_perfs
-            model_data['scaling_factors'] = np.array(scaling_factors)
-            sio.savemat(curr_full, model_data)
-            print("Saved results.")
-            return opt_scaling_factor
+        model_data = sio.loadmat(model_path)
+        model_data['opt_scaling_factor'] = opt_scaling_factor
+        model_data['all_perfs'] = all_perfs
+        model_data['scaling_factors'] = np.array(scaling_factors)
+        sio.savemat(model_path, model_data)
+        print("Saved results.")
+        return opt_scaling_factor
 
     except Exception as e:
         print(f"Exception occurred in lambda_grid_search: {e}")
         raise
 
-    
 
 def parse_range(range_str):
     parts = list(map(int, range_str.split(":")))
@@ -192,20 +160,49 @@ def parse_range(range_str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_dir", type=str, required=True)
+    parser.add_argument("--model_path", type=str, required=True)
     parser.add_argument("--task_name", type=str, choices=["go-nogo", "xor", "mante"], required=True)
     parser.add_argument("--n_trials", type=int, default=100)
     parser.add_argument("--scaling_factors", type=str, default="20:75:5")
+    
+    # Task-specific settings (advanced usage)
+    parser.add_argument("--T", type=int, help="Trial duration (timesteps)", default=200)
+    parser.add_argument("--stim_on", type=int, help="Stimulus onset time", default=50)
+    parser.add_argument("--stim_dur", type=int, help="Stimulus duration", default=50)
+    parser.add_argument("--delay", type=int, help="Delay between stimuli (XOR task)", default=20)
+    parser.add_argument("--eval_amp_thresh", type=float, help="Evaluation amplitude threshold", default=0.7)
+    
     args = parser.parse_args()
 
+    # Build task settings from arguments
+    task_settings = {}
+    for param in ['T', 'stim_on', 'stim_dur', 'delay', 'eval_amp_thresh']:
+        value = getattr(args, param)
+        if value is not None:
+            task_settings[param] = value
+    
+    task_settings = task_settings if task_settings else None
+
     scaling_factors = parse_range(args.scaling_factors)
-    lambda_grid_search(args.model_dir, args.task_name, args.n_trials, scaling_factors)
+    lambda_grid_search(args.model_path, args.task_name, args.n_trials, scaling_factors, task_settings)
 
     # Run the script with the following command:
     """
+    # Basic usage with default settings:
     python -m spiking.lambda_grid_search \
-        --model_dir "./eg/models/xor/P_rec_0.2_Taus_4.0_20.0" \
+        --model_path "./models/xor/rate_model_xor.mat" \
         --task_name xor \
         --n_trials 50 \
         --scaling_factors 20:76:5
+    
+    # Advanced usage with custom settings:
+    python -m spiking.lambda_grid_search \
+        --model_path "./models/go-nogo/rate_model_go_nogo.mat" \
+        --task_name go-nogo \
+        --n_trials 100 \
+        --scaling_factors 20:75:5 \
+        --T 200 \
+        --stim_on 50 \
+        --stim_dur 50 \
+        --eval_amp_thresh 0.7
     """

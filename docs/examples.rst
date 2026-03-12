@@ -192,8 +192,8 @@ You can run the grid search from the command line:
 .. code-block:: bash
 
     python -m spiking.lambda_grid_search \
-        --model_dir "models/go-nogo/P_rec_0.2_Taus_4.0_20.0" \
-        --task_name go-nogo \
+        --model_path "models/go-nogo/model.mat" \
+        --task_name go_nogo \
         --n_trials 100 \
         --scaling_factors 20:76:5
 
@@ -206,8 +206,8 @@ Or call the function from within a Python script:
     
     # Comprehensive grid search
     lambda_grid_search(
-        model_dir='models/go-nogo/P_rec_0.2_Taus_4.0_20.0',
-        task_name='go-nogo',
+        model_path='models/go-nogo/model.mat',
+        task_name='go_nogo',
         n_trials=100,
         scaling_factors=(20, 76, 5)
     )
@@ -221,14 +221,14 @@ For example, to evaluate the Go-NoGo task for a specific model, run the followin
 .. code-block:: bash
 
     python -m spiking.eval_tasks --task go_nogo \
-        --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0
+        --model_path models/go-nogo/model.mat
 
 If you have a specific scaling factor you want to use, you can specify it:
 
 .. code-block:: bash
 
     python -m spiking.eval_tasks --task go_nogo \
-        --model_dir models/go-nogo/P_rec_0.2_Taus_4.0_20.0 \
+        --model_path models/go-nogo/model.mat \
         --scaling_factor 50.0
 
 
@@ -241,12 +241,12 @@ Alternatively, you can call the evaluation function from a Python script:
     # Evaluate Go-NoGo performance
     performance = evaluate_task(
         task_name='go_nogo',
-        model_dir='models/go-nogo/P_rec_0.2_Taus_4.0_20.0'
+        model_path='models/go-nogo/model.mat'
     )
 
 All registered tasks can be evaluated using the same interface:
 
 .. code-block:: bash
 
-    python -m spiking.eval_tasks --task xor --model_dir models/xor/
-    python -m spiking.eval_tasks --task mante --model_dir models/mante/
+    python -m spiking.eval_tasks --task xor --model_path models/xor/model.mat
+    python -m spiking.eval_tasks --task mante --model_path models/mante/model.mat

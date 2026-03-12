@@ -11,8 +11,17 @@ import numpy as np
 from typing import Dict, Any, Optional
 
 from .LIF_network_fnc import LIF_network_fnc
-from .tasks import SpikingTaskFactory
 from .abstract import AbstractSpikingRNN
+# Import rate.tasks using absolute import with path setup
+import sys
+import os
+
+# Add the parent directory to sys.path to enable absolute imports
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from rate.tasks import TaskFactory, AbstractTask, GoNogoTask, XORTask, ManteTask
 
 
 class LIFNetworkAdapter(AbstractSpikingRNN):
@@ -21,9 +30,8 @@ class LIFNetworkAdapter(AbstractSpikingRNN):
     """
     
     def __init__(self, model_path: str, scaling_factor: float):
-        # Create a minimal config for the abstract class
         from .abstract import SpikingConfig
-        config = SpikingConfig(N=200)  # Default N, will be overridden by actual model
+        config = SpikingConfig(N=200)
         super().__init__(config)
         
         self.model_path = model_path
@@ -61,23 +69,24 @@ class LIFNetworkAdapter(AbstractSpikingRNN):
         return spikes, None, output, params
 
 
-def load_model_and_scaling_factor(model_dir: str, optimal_scaling_factor: Optional[float] = None) -> tuple:
+def load_model_and_scaling_factor(model_path: str, optimal_scaling_factor: Optional[float] = None) -> tuple:
     """
     Load model file and determine scaling factor.
     
     Args:
-        model_dir: Directory containing the .mat model file
+        model_path: Path to the .mat model file
         optimal_scaling_factor: Override scaling factor if provided
         
     Returns:
         Tuple of (model_path, scaling_factor)
     """
-    # Find .mat file
-    mat_files = [f for f in os.listdir(model_dir) if f.endswith('.mat')]
-    if not mat_files:
-        raise FileNotFoundError(f"No .mat files found in {model_dir}")
+    # Verify the file exists and is a .mat file
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found: {model_path}")
     
-    model_path = os.path.join(model_dir, mat_files[0])
+    if not model_path.endswith('.mat'):
+        raise ValueError(f"Expected a .mat file, got: {model_path}")
+    
     print(f"Using model file: {model_path}")
     
     # Load scaling factor
@@ -94,75 +103,367 @@ def load_model_and_scaling_factor(model_dir: str, optimal_scaling_factor: Option
     return model_path, scaling_factor
 
 
-def evaluate_task(task_name: str, model_dir: str, 
+def _get_default_task_settings(task_name: str) -> Dict[str, Any]:
+    """Get default settings for each task."""
+    defaults = {
+        'go_nogo': {
+            'T': 200,
+            'stim_on': 30,
+            'stim_dur': 20,
+            'eval_amp_thresh': 0.7
+            
+        },
+        'xor': {
+            'T': 300,
+            'stim_on': 50,
+            'stim_dur': 50,
+            'delay': 20,
+            'eval_amp_thresh': 0.7
+        },
+        'mante': {
+            'T': 300,
+            'stim_on': 50,
+            'stim_dur': 100,
+            'eval_amp_thresh': 0.7
+        }
+    }
+    return defaults.get(task_name, {})
+
+
+def _get_sample_trial_types(task_name: str) -> list:
+    """Get sample trial types for visualization."""
+    sample_types = {
+        'go_nogo': ['go', 'nogo'],
+        'xor': ['++', '+-', '-+', '--'],
+        'mante': ['color', 'motion']
+    }
+    return sample_types.get(task_name, [None])
+
+
+# Spiking Task Evaluator Classes
+class GoNogoSpikingEvaluator(GoNogoTask):
+    """Go/NoGo task evaluator for spiking networks."""
+    
+    def __init__(self, settings: Dict[str, Any]):
+        super().__init__(settings)
+        # Add evaluation-specific settings with defaults
+        self.eval_amp_thresh = settings.get('eval_amp_thresh', 0.7)
+        self.eval_end = settings.get('eval_end', 10000)
+        
+    def evaluate_single_trial(self, model_path: str, scaling_factor: float) -> int:
+        """
+        Evaluate a single Go/NoGo trial using the original logic.
+        
+        Args:
+            model_path: Path to the model .mat file
+            scaling_factor: Scaling factor for the model
+            
+        Returns:
+            int: 1 if trial is correct, 0 if incorrect
+        """
+        import scipy.io as sio
+        
+        model_data = sio.loadmat(model_path)
+        use_initial_weights = False
+        down_sample = 1
+
+        try:
+     
+            T = self.settings['T']
+            stim_on = self.settings['stim_on'] 
+            stim_dur = self.settings['stim_dur']
+            eval_amp_thresh = self.eval_amp_thresh
+            
+            u = np.zeros((1, T))
+            trial_type = 0
+            if np.random.rand() >= 0.50:
+                u[0, stim_on:stim_on+stim_dur] = 1.0
+                trial_type = 1
+            stims = {'mode': 'none'}
+            
+            W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)   
+            
+            max_output = np.max(out[self.eval_end:])
+            
+            if trial_type == 1:  # Go trial
+                success = max_output > eval_amp_thresh
+            else:  # NoGo trial
+                success = max_output < 1 - eval_amp_thresh
+            
+            return 1 if success else 0
+
+        except Exception as e:
+            print(f"Error in GoNogoSpikingEvaluator.evaluate_single_trial: {e}")
+            return 0
+
+
+class XORSpikingEvaluator(XORTask):
+    """XOR task evaluator for spiking networks."""
+    
+    def __init__(self, settings: Dict[str, Any]):
+        super().__init__(settings)
+        # Add evaluation-specific settings with defaults
+        self.eval_amp_thresh = settings.get('eval_amp_thresh', 0.7)
+        self.eval_end = settings.get('eval_end', 20000)
+    
+    def evaluate_single_trial(self, model_path: str, scaling_factor: float) -> int:
+        """
+        Evaluate a single XOR trial using the original logic.
+        
+        Args:
+            model_path: Path to the model .mat file
+            scaling_factor: Scaling factor for the model
+            
+        Returns:
+            int: 1 if trial is correct, 0 if incorrect
+        """
+        import scipy.io as sio
+        
+        model_data = sio.loadmat(model_path)
+        use_initial_weights = False
+        down_sample = 1
+
+        try:
+            # Use settings from the task instance (inherited from XORTask)
+            T = self.settings['T']
+            stim_on = self.settings['stim_on']
+            stim_dur = self.settings['stim_dur']
+            delay = self.settings['delay']
+            eval_amp_thresh = self.eval_amp_thresh
+            
+            u = np.zeros((2, T))
+            u_lab = np.zeros(2)
+            if np.random.rand() >= 0.5:
+                u[0, stim_on:stim_on+stim_dur] = 1
+                u_lab[0] = 1
+            else:
+                u[0, stim_on:stim_on+stim_dur] = -1
+                u_lab[0] = -1
+            if np.random.rand() >= 0.5:
+                u[1, stim_on+stim_dur+delay:stim_on+2*stim_dur+delay] = 1
+                u_lab[1] = 1
+            else:
+                u[1, stim_on+stim_dur+delay:stim_on+2*stim_dur+delay] = -1
+                u_lab[1] = -1
+            label = np.prod(u_lab)
+            stims = {'mode': 'none'}
+            _, _, _, _, _, out, _ = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)
+            
+            if (label == 1 and np.max(out[self.eval_end:]) > eval_amp_thresh) or (label == -1 and np.min(out[self.eval_end:]) < -eval_amp_thresh):
+                return 1
+            return 0
+
+        except Exception as e:
+            print(f"Error in XORSpikingEvaluator.evaluate_single_trial: {e}")
+            return 0
+
+
+class ManteSpikingEvaluator(ManteTask):
+    """Mante task evaluator for spiking networks."""
+    
+    def __init__(self, settings: Dict[str, Any]):
+        super().__init__(settings)
+        # Add evaluation-specific settings with defaults
+        self.eval_amp_thresh = settings.get('eval_amp_thresh', 0.7)
+        self.eval_end = settings.get('eval_end', 26000)
+        
+    def evaluate_single_trial(self, model_path: str, scaling_factor: float) -> int:
+        """
+        Evaluate a single Mante trial using the original logic.
+        
+        Args:
+            model_path: Path to the model .mat file
+            scaling_factor: Scaling factor for the model
+            
+        Returns:
+            int: 1 if trial is correct, 0 if incorrect
+        """
+        import scipy.io as sio
+        
+        model_data = sio.loadmat(model_path)
+        use_initial_weights = False
+        down_sample = 1
+
+        try:
+            # Use settings from the task instance (inherited from ManteTask)
+            T = self.settings['T']
+            stim_on = self.settings['stim_on']
+            stim_dur = self.settings['stim_dur']
+            eval_amp_thresh = self.eval_amp_thresh
+            
+            u = np.zeros((4, T))
+            u_lab = np.zeros(2)
+            if np.random.rand() >= 0.5:
+                u[0, stim_on:stim_on+stim_dur] = np.random.randn(stim_dur) + 0.5
+                u_lab[0] = 1
+            else:
+                u[0, stim_on:stim_on+stim_dur] = np.random.randn(stim_dur) - 0.5
+                u_lab[0] = -1
+            if np.random.rand() >= 0.5:
+                u[1, stim_on:stim_on+stim_dur] = np.random.randn(stim_dur) + 0.5
+                u_lab[1] = 1
+            else:
+                u[1, stim_on:stim_on+stim_dur] = np.random.randn(stim_dur) - 0.5
+                u_lab[1] = -1
+            if np.random.rand() >= 0.5:
+                u[2, :] = 1
+                label = u_lab[0]
+            else:
+                u[3, :] = 1
+                label = u_lab[1]
+            stims = {'mode': 'none'}
+            _, _, _, _, _, out, _ = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)
+            if (label == 1 and np.max(out[self.eval_end:]) > eval_amp_thresh) or (label == -1 and np.min(out[self.eval_end:]) < -eval_amp_thresh):
+                return 1
+            return 0
+
+        except Exception as e:
+            print(f"Error in ManteSpikingEvaluator.evaluate_single_trial: {e}")
+            return 0
+
+
+# Task Evaluator Factory
+class SpikingEvaluatorFactory:
+    """Factory class for creating spiking task evaluator instances."""
+    
+    _registry = {
+        'go_nogo': GoNogoSpikingEvaluator,
+        'xor': XORSpikingEvaluator,
+        'mante': ManteSpikingEvaluator
+    }
+    
+    @classmethod
+    def create_evaluator(cls, task_name: str, settings: Dict[str, Any]):
+        """
+        Create a spiking task evaluator instance by type.
+        
+        Args:
+            task_name (str): Name of task ('go_nogo', 'xor', 'mante').
+            settings (Dict[str, Any]): Task settings.
+            
+        Returns:
+            Spiking task evaluator instance.
+            
+        Raises:
+            ValueError: If task type is not recognized.
+        """
+        if task_name not in cls._registry:
+            available = list(cls._registry.keys())
+            raise ValueError(f"Task type '{task_name}' not found. Available types: {available}")
+        
+        evaluator_class = cls._registry[task_name]
+        return evaluator_class(settings)
+    
+    @classmethod
+    def list_available_tasks(cls) -> list:
+        """List all available spiking task evaluator types."""
+        return list(cls._registry.keys())
+
+
+def evaluate_single_trial(task_name: str, settings: Dict[str, Any], 
+                          model_path: str, scaling_factor: float) -> int:
+    """
+    Evaluate a single trial for a given task using the appropriate evaluator class.
+    
+    Args:
+        task_name: Name of the task ('go_nogo', 'xor', 'mante')
+        settings: Task settings dictionary
+        model_path: Path to the model .mat file
+        scaling_factor: Scaling factor for the model
+        
+    Returns:
+        int: 1 if trial is correct, 0 if incorrect
+    """
+    try:
+        # Create the appropriate evaluator using the factory
+        evaluator = SpikingEvaluatorFactory.create_evaluator(task_name, settings)
+        
+        # Use the evaluator's evaluate_single_trial method
+        return evaluator.evaluate_single_trial(model_path, scaling_factor)
+        
+    except Exception as e:
+        print(f"Error in evaluate_single_trial: {e}")
+        return 0
+
+
+def evaluate_task(task_name: str, model_path: str, 
                  optimal_scaling_factor: Optional[float] = None,
                  task_settings: Optional[Dict[str, Any]] = None,
-                 save_plots: bool = True) -> Dict[str, float]:
+                 n_trials: int = 100,
+                 all_trial_types: bool = False,
+                 ) -> Dict[str, float]:
     """
     Evaluate a spiking task on a trained model.
     
     Args:
         task_name: Name of the task ('go_nogo', 'xor', 'mante')
-        model_dir: Directory containing the trained model
+        model_path: Path to the .mat model file
         optimal_scaling_factor: Override scaling factor
         task_settings: Override task settings
-        save_plots: Whether to save visualization plots
-        
+        n_trials: Number of trials to evaluate
+        all_trial_types: Evaluate all trial types for the task
+    
     Returns:
         Performance metrics dictionary
     """
     # Load model and scaling factor
-    model_path, scaling_factor = load_model_and_scaling_factor(model_dir, optimal_scaling_factor)
+    model_path, scaling_factor = load_model_and_scaling_factor(model_path, optimal_scaling_factor)
     
     # Create spiking network adapter
     spiking_rnn = LIFNetworkAdapter(model_path, scaling_factor)
     
-    # Create task
-    task = SpikingTaskFactory.create_task(task_name, task_settings)
+    # Create task using rate-based task factory
+    task = TaskFactory.create_task(task_name, task_settings or _get_default_task_settings(task_name))
     print(f"Created {task.__class__.__name__} with settings: {task.settings}")
     
-    # Evaluate performance
-    stimulus, label = task.generate_stimulus()
-    performance = task.evaluate_trial(spiking_rnn, stimulus, label)
+    results = []
+    correct_trials = 0
+    incorrect_trials = 0
+    # Evaluate single trial performance
+    for i in range(n_trials):
+        result = evaluate_single_trial(task_name, task.settings, model_path, scaling_factor)
+        results.append(result)
+        if result == 1:
+            correct_trials += 1
+        else:
+            incorrect_trials += 1
     
-    # Create visualizations if requested
-    if save_plots:
-        print(f"\nGenerating sample trials and visualizations...")
+    performance = {'Correct trials': correct_trials,
+                   'Incorrect trials': incorrect_trials,
+                   'Total trials': len(results)
+                   }
+
+    if all_trial_types:
+        # Generate all trial types
+        sample_trial_types = _get_sample_trial_types(task_name)
+        print(f"\nGenerating all trial types: {sample_trial_types}...")
+        
         results = []
         
-        # Generate sample trials using task's sample trial types
-        sample_trial_types = task.get_sample_trial_types()
-        if sample_trial_types:
-            for trial_type in sample_trial_types:
-                try:
-                    stimulus, label = task.generate_stimulus(trial_type)
-                    result = task.evaluate_trial(spiking_rnn, stimulus, label)
-                    results.append(result)
-                except Exception as e:
-                    print(f"Warning: Failed to generate trial type '{trial_type}': {e}")
-        else:
-            # Fallback: generate a few random trials
-            for _ in range(4):
-                try:
-                    stimulus, label = task.generate_stimulus()
-                    result = task.evaluate_trial(spiking_rnn, stimulus, label)
-                    results.append(result)
-                except Exception as e:
-                    print(f"Warning: Failed to generate random trial: {e}")
-        
-        # Save visualizations using task's built-in methods
-        if hasattr(task, 'create_visualization') and results:
+        for trial_type in sample_trial_types:
             try:
-                task.create_visualization(results, model_dir)
-                plot_dir = os.path.join(model_dir, 'plots')
-                print(f"Plots saved to: {plot_dir}")
+                stimulus, target, label = task.simulate_trial(trial_type)
+                # Simulate the network
+                stims = {'mode': 'none'}
+                spikes, voltages, output, params = spiking_rnn.simulate(stimulus, stims)
+                
+                result = {
+                    'stimulus': stimulus,
+                    'target': target,
+                    'label': label,
+                    'spikes': spikes,
+                    'output': output,
+                    'params': params,
+                    'trial_type': trial_type
+                }
+                results.append(result)
+                
             except Exception as e:
-                print(f"Warning: Failed to create visualizations: {e}")
-        elif results:
-            print(f"Generated {len(results)} sample trials (no visualization method available)")
-        else:
-            print("No sample trials were generated for visualization")
-    
+                print(f"Warning: Failed to generate trial type '{trial_type}': {e}")
+        
+        pd.DataFrame(results).to_csv(f'{task_name}_all_trial_types.csv')
+        
+    print(f"Performance: {performance}")
     return performance
 
 
@@ -173,35 +474,36 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python -m spiking.eval_tasks --task go_nogo --model_dir models/go-nogo/
-  python -m spiking.eval_tasks --task xor --model_dir models/xor/ --n_trials 50
-  python -m spiking.eval_tasks --task mante --model_dir models/mante/ --scaling_factor 45.0
+  python -m spiking.eval_tasks --task go_nogo --model_path models/go-nogo/model.mat
+  python -m spiking.eval_tasks --task xor --model_path models/xor/model.mat --n_trials 50
+  python -m spiking.eval_tasks --task mante --model_path models/mante/model.mat --scaling_factor 45.0
         """
     )
     
-    # Get available tasks from factory
-    from .tasks import SpikingTaskFactory
-    available_tasks = SpikingTaskFactory.list_available_tasks()
+    # Get available tasks from rate task factory
+    available_tasks = TaskFactory.list_available_tasks()
     
     parser.add_argument('--task', type=str, required=True,
                        help=f'Task to evaluate. Available: {", ".join(available_tasks)}')
-    parser.add_argument('--model_dir', type=str, required=True,
-                       help='Directory containing the trained model .mat file')
+    parser.add_argument('--model_path', type=str, required=True,
+                       help='Path to the trained model .mat file')
     parser.add_argument('--scaling_factor', type=float, default=None,
                        help='Override scaling factor (uses value from .mat file if not provided)')
-    parser.add_argument('--no_plots', action='store_true',
-                       help='Skip generating visualization plots')
+    parser.add_argument('--n_trials', type=int, default=100,
+                       help='Number of trials to evaluate')
+    parser.add_argument('--all_trial_types', action='store_true', default=False,
+                       help='Generate all trial types for the task')
     
     # Task-specific settings (advanced usage)
     parser.add_argument('--T', type=int, help='Trial duration (timesteps)')
     parser.add_argument('--stim_on', type=int, help='Stimulus onset time')
     parser.add_argument('--stim_dur', type=int, help='Stimulus duration')
-    
+    parser.add_argument('--delay', type=int, help='Delay time')
     args = parser.parse_args()
     
     # Build task settings from arguments
     task_settings = {}
-    for param in ['T', 'stim_on', 'stim_dur']:
+    for param in ['T', 'stim_on', 'stim_dur', 'delay']:
         value = getattr(args, param)
         if value is not None:
             task_settings[param] = value
@@ -211,14 +513,15 @@ Examples:
     try:
         performance = evaluate_task(
             task_name=args.task,
-            model_dir=args.model_dir,
+            model_path=args.model_path,
             optimal_scaling_factor=args.scaling_factor,
             task_settings=task_settings,
-            save_plots=not args.no_plots
+            n_trials=args.n_trials,
+            all_trial_types=args.all_trial_types,
         )
         
         print(f"\n✓ Evaluation completed successfully!")
-        # print(f"Performance: {performance}")
+        # print(f"Results: {results}")
         return 0
         
     except Exception as e:
@@ -231,6 +534,6 @@ if __name__ == "__main__":
     
     # Usage:
     """
-    python -m spiking.eval_tasks --task go_nogo --model_dir models/go-nogo/
-    python -m spiking.eval_tasks --task xor --model_dir models/xor/ --scaling_factor 45.0
+    python -m spiking.eval_tasks --task go_nogo --model_path models/go-nogo/model.mat
+    python -m spiking.eval_tasks --task xor --model_path models/xor/model.mat --scaling_factor 45.0 --n_trials 50
     """

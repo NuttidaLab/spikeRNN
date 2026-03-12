@@ -125,13 +125,13 @@ def generate_lif_params(dt: float = 0.00005, downsample: int = 1) -> Dict[str, f
     }
 
 
-def validate_stimulus(u: np.ndarray, task_type: str = 'go-nogo') -> bool:
+def validate_stimulus(u: np.ndarray, task_type: str = 'go_nogo') -> bool:
     """
     Validate input stimulus format for different tasks.
     
     Args:
         u (np.ndarray): Input stimulus array.
-        task_type (str): Type of task ('go-nogo', 'xor', 'mante').
+        task_type (str): Type of task ('go_nogo', 'xor', 'mante').
         
     Returns:
         bool: True if stimulus is valid.
@@ -146,7 +146,7 @@ def validate_stimulus(u: np.ndarray, task_type: str = 'go-nogo') -> bool:
         raise ValueError("Stimulus must be a 2D array (n_inputs, n_timesteps)")
     
     task_requirements = {
-        'go-nogo': (1, None),  # 1 input, any length
+        'go_nogo': (1, None),  # 1 input, any length
         'xor': (2, None),      # 2 inputs, any length  
         'mante': (4, None)     # 4 inputs, any length
     }

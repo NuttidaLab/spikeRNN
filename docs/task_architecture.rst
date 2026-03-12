@@ -32,11 +32,12 @@ Spiking Package Tasks
 
 The ``spiking`` package provides evaluation tasks:
 
-* ``AbstractSpikingTask``: Base class for spiking task evaluation
-* ``GoNogoSpikingTask``: Go/NoGo task evaluation for spiking networks
-* ``XORSpikingTask``: XOR task evaluation for spiking networks
-* ``ManteSpikingTask``: Mante task evaluation for spiking networks
-* ``SpikingTaskFactory``: Factory for creating spiking task instances
+* ``AbstractSpikingRNN``: Base class for spiking network adapters
+* ``GoNogoSpikingEvaluator``: Go/NoGo task evaluation for spiking networks
+* ``XORSpikingEvaluator``: XOR task evaluation for spiking networks
+* ``ManteSpikingEvaluator``: Mante task evaluation for spiking networks
+* ``SpikingEvaluatorFactory``: Factory for creating spiking task evaluator instances
+* ``LIFNetworkAdapter``: Adapter for using LIF networks with the evaluation interface
 
 Usage Examples
 --------------
@@ -99,8 +100,8 @@ There are two levels of evaluation available:
     # Complete evaluation including model loading and visualization
     performance = evaluate_task(
         task_name='go_nogo',
-        model_dir='models/go-nogo',
-        save_plots=True
+        model_path='models/go-nogo/model.mat',
+        n_trials=50
     )
     print(f"Accuracy: {performance['overall_accuracy']:.2f}")
 
@@ -109,8 +110,8 @@ There are two levels of evaluation available:
 .. code-block:: bash
 
     # Evaluate any task from command line
-    python -m spiking.eval_tasks --task go_nogo --model_dir models/go-nogo/
-    python -m spiking.eval_tasks --task xor --model_dir models/xor/
+    python -m spiking.eval_tasks --task go_nogo --model_path models/go-nogo/model.mat
+    python -m spiking.eval_tasks --task xor --model_path models/xor/model.mat
 
 Factory Pattern Usage
 ~~~~~~~~~~~~~~~~~~~~~
@@ -216,33 +217,39 @@ The evaluation system (``eval_tasks.py``) is fully extensible to support custom 
 
 .. code-block:: python
 
-    from spiking.tasks import SpikingTaskFactory, AbstractSpikingTask
+    from spiking.eval_tasks import SpikingEvaluatorFactory
+    from rate.tasks import AbstractTask
     
-    class MyCustomSpikingTask(AbstractSpikingTask):
-        def get_default_settings(self):
-            return {'T': 200, 'custom_param': 1.0}
+    class MyCustomSpikingEvaluator(AbstractTask):
+        def __init__(self, settings):
+            super().__init__(settings)
+            # Add evaluation-specific settings with defaults
+            self.eval_amp_thresh = settings.get('eval_amp_thresh', 0.7)
         
         def validate_settings(self):
-            # Validation logic
-            pass
+            # Validation logic for custom task
+            required_keys = ['T', 'custom_param']
+            for key in required_keys:
+                if key not in self.settings:
+                    raise ValueError(f"Missing required setting: {key}")
         
-        def get_sample_trial_types(self):
-            return ['type_a', 'type_b']  # For visualization
-        
-        def generate_stimulus(self, trial_type=None):
-            # Generate stimulus logic
-            pass
-        
-        def evaluate_trial(self, spiking_rnn, stimulus, label):
-            # Single trial evaluation
-            pass
-        
-        def evaluate_performance(self, spiking_rnn, n_trials=100):
-            # Multi-trial performance metrics
+        def evaluate_single_trial(self, model_path: str, scaling_factor: float) -> int:
+            """
+            Evaluate a single trial for the custom task.
+            
+            Args:
+                model_path: Path to the model .mat file
+                scaling_factor: Scaling factor for the model
+                
+            Returns:
+                int: 1 if trial is correct, 0 if incorrect
+            """
+            # Custom evaluation logic here
+            # This should implement the specific task evaluation
             pass
     
     # Register with factory
-    SpikingTaskFactory.register_task('my_custom', MyCustomSpikingTask)
+    SpikingEvaluatorFactory._registry['my_custom'] = MyCustomSpikingEvaluator
 
 **2. Use with eval_tasks.py**
 
@@ -251,7 +258,7 @@ Once registered, your custom task works with the evaluation system:
 .. code-block:: bash
 
     # Command line
-    python -m spiking.eval_tasks --task my_custom --model_dir models/custom/
+    python -m spiking.eval_tasks --task my_custom --model_path models/custom/model.mat
     
 .. code-block:: python
 
@@ -259,13 +266,9 @@ Once registered, your custom task works with the evaluation system:
     from spiking.eval_tasks import evaluate_task
     
     performance = evaluate_task(
-        task_name='my_custom',
-        model_dir='models/custom/',
+        task_name='my_custo_task',
+        model_path='models/custom/model.mat',
     )
-
-**3. Visualization Support**
-
-The ``get_sample_trial_types()`` method allows your custom task to specify what trial types should be used for generating sample visualizations. If not provided, the system will generate random trials for visualization.
 
 API Reference
 -------------
@@ -273,7 +276,7 @@ API Reference
 For detailed API documentation, see:
 
 * Rate RNN: :doc:`api/rate/tasks`
-* Spiking RNN: :doc:`api/spiking/tasks`
+* Spiking RNN: :doc:`api/spiking/eval_tasks`
 
 Examples
 --------

@@ -284,7 +284,7 @@ W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(
 - `SpikingConfig`: Configuration dataclass
 - `create_default_spiking_config()`: Default configuration
 - `AbstractSpikingRNN`: Base class for extensions
-- `AbstractSpikingTask`: Base class for spiking RNN evaluation
+- `AbstractSpikingEvaluator`: Base class for spiking RNN evaluation
 
 ## Links
 

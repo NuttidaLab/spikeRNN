@@ -73,14 +73,6 @@ from .abstract import (
     create_default_spiking_config
 )
 
-# Task classes
-from .tasks import (
-    AbstractSpikingTask,
-    GoNogoSpikingTask,
-    XORSpikingTask, 
-    ManteSpikingTask,
-    SpikingTaskFactory
-)
 
 # Version info
 __version__ = "0.1.0"
@@ -93,14 +85,7 @@ __all__ = [
     "LIF_network_fnc",
     "lambda_grid_search",
     "evaluate_task",
-    
-    # Task classes
-    "AbstractSpikingTask",
-    "GoNogoSpikingTask",
-    "XORSpikingTask",
-    "ManteSpikingTask", 
-    "SpikingTaskFactory",
-    
+
     # Utility functions
     "load_rate_model",
     "create_connectivity_masks",

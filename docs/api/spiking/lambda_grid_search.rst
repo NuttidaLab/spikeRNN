@@ -16,10 +16,10 @@ Grid Search Parameters
 
 The main grid search function accepts:
 
-* ``model_dir`` (str): Directory containing trained rate RNN model .mat files
-  (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0')
-* ``task_name`` (str): Task type ('go-nogo', 'xor', or 'mante')
-  (default: 'go-nogo')
+* ``model_path`` (str): Path to trained rate RNN model .mat file
+  (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0/model.mat')
+* ``task_name`` (str): Task type ('go_nogo', 'xor', or 'mante')
+  (default: 'go_nogo')
 * ``n_trials`` (int): Number of trials to evaluate each scaling factor
   (default: 100)
 * ``scaling_factors`` (list): List of scaling factors to test
@@ -50,10 +50,10 @@ Example Usage
 
    # Grid search with custom parameters
    lambda_grid_search(
-       model_dir='models/go-nogo',
+       model_path='models/go-nogo/model.mat',
        n_trials=50,
        scaling_factors=list(range(30, 81, 5)),
-       task_name='go-nogo'
+       task_name='go_nogo'
    )
 
 Optimization Process
@@ -61,7 +61,7 @@ Optimization Process
 
 The grid search follows these steps:
 
-1. **Load trained rate models** from the specified directory
+1. **Load trained rate model** from the specified .mat file
 2. **Generate test stimuli** appropriate for the task type
 3. **Iterate through scaling factors** in the specified range
 4. **Convert to spiking network** for each scaling factor
@@ -93,7 +93,7 @@ Different metrics are used depending on the task:
 Output Files
 ----------------------------------------------------
 
-The function modifies each input `.mat` file to include:
+The function modifies the input `.mat` file to include:
 
 * `opt_scaling_factor`: The optimal scaling factor found
 * `all_perfs`: Performance scores for all tested scaling factors
