@@ -18,8 +18,8 @@ The SpikeRNN framework consists of two complementary packages with a modern **ta
 ### Spiking RNN Package
 - Rate-to-spike conversion maintaining task performance
 - Biologically realistic leaky integrate-and-fire (LIF) neurons
-- Spiking task evaluation classes (GoNogoSpikingTask, XORSpikingTask, ManteSpikingTask)
-- SpikingTaskFactory for task-based evaluation
+- Spiking task evaluation classes (GoNogoSpikingEvaluator, XORSpikingEvaluator, ManteSpikingEvaluator)
+- SpikingEvaluatorFactory for task-based evaluation
 - Scaling factor optimization for optimal conversion
 
 ## Task-Based Architecture
@@ -44,13 +44,13 @@ After installation, you can import both packages:
 
 ```python
 from rate import FR_RNN_dale, set_gpu, create_default_config
-from spiking import LIF_network_fnc, lambda_grid_search, evaluate_task
+from spiking import LIF_network_fnc, lambda_grid_search
 
 # Task-based architecture
 from rate import TaskFactory
-from spiking import SpikingTaskFactory
+from spiking.eval_tasks import SpikingEvaluatorFactory
 from rate.tasks import GoNogoTask, XORTask, ManteTask
-from spiking.tasks import GoNogoSpikingTask, XORSpikingTask, ManteSpikingTask
+from spiking.eval_tasks import GoNogoSpikingEvaluator, XORSpikingEvaluator, ManteSpikingEvaluator
 ```
 
 ## Quick Start: Task-Based Architecture
@@ -58,7 +58,6 @@ from spiking.tasks import GoNogoSpikingTask, XORSpikingTask, ManteSpikingTask
 ### Creating and Using Tasks
 
 ```python
-from spikeRNN import TaskFactory
 
 # Create task settings
 settings = {
@@ -81,23 +80,22 @@ print(f"Generated {task.__class__.__name__} trial with label: {label}")
 The framework provides 2 levels of evaluation:
 
 ```python
-from spiking import SpikingTaskFactory, evaluate_task
+from spiking.eval_tasks import SpikingEvaluatorFactory, evaluate_task
 
 # Direct task evaluation (when you have a network instance, not necessarily trained)
-spiking_task = SpikingTaskFactory.create_task('go_nogo')
-performance = spiking_task.evaluate_performance(spiking_rnn, n_trials=100)
-print(f"Accuracy: {performance['overall_accuracy']:.2f}")
+spiking_evaluator = SpikingEvaluatorFactory.create_evaluator('go_nogo', settings)
+performance = spiking_evaluator.evaluate_single_trial(model_path, scaling_factor)
+print(f"Trial result: {performance}")
 
 # High-level interface (when you have model files with trained weights)
 performance = evaluate_task(
     task_name='go_nogo',
-    model_dir='models/go-nogo',
-    n_trials=100,
+    model_path='models/go-nogo/model.mat',
     save_plots=True
 )
 
 # Command line interface (for scripts and automation)
-# python -m spiking.eval_tasks --task go_nogo --model_dir models/go-nogo/
+# python -m spiking.eval_tasks --task go_nogo --model_path models/go-nogo/model.mat
 ```
 
 ### Extending with Custom Tasks
@@ -128,28 +126,32 @@ stimulus, target, label = custom_task.simulate_trial()
 Create custom spiking evaluation tasks:
 
 ```python
-from spiking.tasks import AbstractSpikingTask, SpikingTaskFactory
+from spiking.eval_tasks import SpikingEvaluatorFactory
+from rate.tasks import AbstractTask
 
-class MyCustomSpikingTask(AbstractSpikingTask):
-    def get_default_settings(self):
-        return {'T': 200, 'custom_param': 1.0}
+class MyCustomSpikingEvaluator(AbstractTask):
+    def __init__(self, settings):
+        super().__init__(settings)
+        self.eval_amp_thresh = settings.get('eval_amp_thresh', 0.7) # custom value
     
-    def get_sample_trial_types(self):
-        return ['type_a', 'type_b']  # For visualization
+    def validate_settings(self):
+        # Validation logic for custom task
+        required_keys = ['T', 'custom_param']
+        for key in required_keys:
+            if key not in self.settings:
+                raise ValueError(f"Missing required setting: {key}")
     
-    def generate_stimulus(self, trial_type=None):
-        # Generate stimulus logic
-        return stimulus, label
-    
-    def evaluate_performance(self, spiking_rnn, n_trials=100):
-        # Multi-trial performance evaluation
-        return {'accuracy': 0.85, 'n_trials': n_trials}
+    def evaluate_single_trial(self, model_path: str, scaling_factor: float) -> int:
+        """Evaluate a single trial for the custom task."""
+        # Custom evaluation logic here
+        # Return 1 if correct, 0 if incorrect
+        pass
 
 # Register and use with evaluation system
-SpikingTaskFactory.register_task('my_custom', MyCustomSpikingTask)
+SpikingEvaluatorFactory._registry['my_custom'] = MyCustomSpikingEvaluator
 
 # Now works with eval_tasks.py
-python -m spiking.eval_tasks --task my_custom --model_dir models/custom/
+python -m spiking.eval_tasks --task my_custom --model_path models/custom/model.mat
 ```
 
 ## Requirements
@@ -201,16 +203,20 @@ import numpy as np
 
 # Optimize scaling factor
 lambda_grid_search(
-    model_dir='models/go-nogo',
+    model_path='models/go-nogo/model.mat',
     task_name='go-nogo',
     n_trials=100,
-    scaling_factors=list(np.arange(25, 76, 5))
+    scaling_factors=list(np.arange(25, 76, 5)),
+    task_settings=settings
 )
 
 # Evaluate performance
 performance = evaluate_task(
     task_name='go_nogo',
-    model_dir='models/go-nogo/'
+    model_path='models/go-nogo/model.mat',
+    n_trails=50,
+    task_settings=settings,
+    all_trial_tasks=True
 )
 ```
 
