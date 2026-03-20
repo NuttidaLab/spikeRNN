@@ -204,21 +204,6 @@ class FR_RNN_dale(nn.Module):
         print('\t Positive Weights: %2.2f %%' % (pos_w/(self.N*self.N)*100))
         print('\t Negative Weights: %2.2f %%' % (neg_w/(self.N*self.N)*100))
     
-    def project_weights(self, training_params: Dict[str, Any]) -> None:
-        """
-        Project weights to satisfy Dale's principle constraints (optional).
-        
-        Note: With F.relu() in the forward pass, this projection is technically
-        optional since negative weights are masked during computation anyway.
-        However, it keeps the stored weights cleaner.
-        
-        Args:
-            training_params (Dict[str, Any]): Training parameters including optimizer type.
-        """
-        # if self.apply_dale == True and training_params.get('optimizer', 'adam') != 'eg':
-        #     with torch.no_grad():
-        #         self.w.data.clamp_(min=0.0)
-        pass
 
     def forward(self, stim: torch.Tensor, taus: List[float], training_params: Dict[str, Any], 
                 settings: Dict[str, Any]) -> Tuple[torch.Tensor, List[torch.Tensor], List[torch.Tensor], 
