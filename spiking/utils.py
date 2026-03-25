@@ -147,12 +147,15 @@ def validate_stimulus(u: np.ndarray, task_type: str = 'go_nogo') -> bool:
     
     task_requirements = {
         'go_nogo': (1, None),  # 1 input, any length
-        'xor': (2, None),      # 2 inputs, any length  
+        'xor': (2, None),      # 2 inputs, any length
         'mante': (4, None)     # 4 inputs, any length
     }
-    
-    if task_type.lower() in task_requirements:
-        required_inputs, required_length = task_requirements[task_type.lower()]
+
+    # Normalize task_type: accept both 'go-nogo' and 'go_nogo' forms
+    normalized_type = task_type.lower().replace('-', '_')
+
+    if normalized_type in task_requirements:
+        required_inputs, required_length = task_requirements[normalized_type]
         
         if u.shape[0] != required_inputs:
             raise ValueError(f"Task '{task_type}' requires {required_inputs} input(s), got {u.shape[0]}")
