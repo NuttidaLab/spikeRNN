@@ -165,12 +165,12 @@ if __name__ == "__main__":
     parser.add_argument("--n_trials", type=int, default=100)
     parser.add_argument("--scaling_factors", type=str, default="20:75:5")
     
-    # Task-specific settings (advanced usage)
-    parser.add_argument("--T", type=int, help="Trial duration (timesteps)", default=200)
-    parser.add_argument("--stim_on", type=int, help="Stimulus onset time", default=50)
-    parser.add_argument("--stim_dur", type=int, help="Stimulus duration", default=50)
-    parser.add_argument("--delay", type=int, help="Delay between stimuli (XOR task)", default=20)
-    parser.add_argument("--eval_amp_thresh", type=float, help="Evaluation amplitude threshold", default=0.7)
+    # Task-specific settings (advanced usage) - defaults are None so task-specific defaults apply
+    parser.add_argument("--T", type=int, help="Trial duration (timesteps)")
+    parser.add_argument("--stim_on", type=int, help="Stimulus onset time")
+    parser.add_argument("--stim_dur", type=int, help="Stimulus duration")
+    parser.add_argument("--delay", type=int, help="Delay between stimuli (XOR task)")
+    parser.add_argument("--eval_amp_thresh", type=float, help="Evaluation amplitude threshold")
     
     args = parser.parse_args()
 
