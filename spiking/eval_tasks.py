@@ -8,13 +8,11 @@ import os
 import sys
 import scipy.io as sio
 import numpy as np
+import pandas as pd
 from typing import Dict, Any, Optional
 
 from .LIF_network_fnc import LIF_network_fnc
 from .abstract import AbstractSpikingRNN
-# Import rate.tasks using absolute import with path setup
-import sys
-import os
 
 # Add the parent directory to sys.path to enable absolute imports
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -360,21 +358,27 @@ class SpikingEvaluatorFactory:
         return list(cls._registry.keys())
 
 
-def evaluate_single_trial(task_name: str, settings: Dict[str, Any], 
-                          model_path: str, scaling_factor: float) -> int:
+def evaluate_single_trial(task_name: str, model_path: str, scaling_factor: float,
+                          settings: Optional[Dict[str, Any]] = None) -> int:
     """
     Evaluate a single trial for a given task using the appropriate evaluator class.
-    
+
     Args:
         task_name: Name of the task ('go_nogo', 'xor', 'mante')
-        settings: Task settings dictionary
         model_path: Path to the model .mat file
         scaling_factor: Scaling factor for the model
-        
+        settings: Optional custom settings. If None, uses default settings.
+
     Returns:
         int: 1 if trial is correct, 0 if incorrect
     """
     try:
+        task_name = task_name.replace('-', '_')
+
+        # Use provided settings or get default settings for the task
+        if settings is None:
+            settings = _get_default_task_settings(task_name)
+
         # Create the appropriate evaluator using the factory
         evaluator = SpikingEvaluatorFactory.create_evaluator(task_name, settings)
         
@@ -421,7 +425,7 @@ def evaluate_task(task_name: str, model_path: str,
     incorrect_trials = 0
     # Evaluate single trial performance
     for i in range(n_trials):
-        result = evaluate_single_trial(task_name, task.settings, model_path, scaling_factor)
+        result = evaluate_single_trial(task_name, model_path, scaling_factor, task.settings)
         results.append(result)
         if result == 1:
             correct_trials += 1
