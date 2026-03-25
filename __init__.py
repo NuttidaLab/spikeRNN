@@ -54,10 +54,6 @@ from .spiking import (
     LIF_network_fnc,
     create_default_spiking_config,
     lambda_grid_search,
-    SpikingTaskFactory,
-    GoNogoSpikingTask,
-    XORSpikingTask,
-    ManteSpikingTask
 )
 
 def check_packages():
@@ -86,12 +82,6 @@ __all__ = [
     "LIF_network_fnc",
     "create_default_spiking_config",
     "lambda_grid_search",
-    
-    # Task-based architecture (spiking)
-    "SpikingTaskFactory",
-    "GoNogoSpikingTask",
-    "XORSpikingTask",
-    "ManteSpikingTask",
     
     # Subpackages
     "rate",

@@ -61,9 +61,10 @@ from spiking import lambda_grid_search
 # Find optimal scaling factor for your model
 opt_scaling_factor = lambda_grid_search(
     model_path='models/go-nogo/model.mat',
+    task_name='go_nogo',
     n_trials=50,
-    scaling_range=(20, 80),
-    task_name='go-nogo'
+    scaling_factors=list(range(20, 81, 5)),
+    task_settings=settings,
 )
 ```
 
@@ -75,9 +76,10 @@ from spiking.eval_tasks import evaluate_task
 # Evaluate spiking network performance
 performance = evaluate_task(
     task_name='go_nogo',           # or 'xor', 'mante', custom tasks
-    model_dir='models/go-nogo/',
-    n_trials=100,
-    save_plots=True
+    model_path='models/go-nogo/model.mat',
+    optimal_scaling_factor=opt_scaling_factor,
+    task_settings=settings,
+    n_trials=50
 )
 ```
 
@@ -109,10 +111,11 @@ Main function for rate-to-spike conversion and simulation.
 Grid search optimization for finding optimal scaling factors.
 
 **Parameters:**
-- `model_dir`: Path to rate model directory
+- `model_path`: Path to rate model .mat file
 - `task_name`: Task name ('go-nogo', 'xor', 'mante')
 - `n_trials`: Number of evaluation trials per scaling factor
 - `scaling_factors`: Range of scaling factors to test
+- `task_settings`: Task settings (including T, stim_on, stim_dur, etc.)
 
 
 ### evaluate_task()
@@ -121,9 +124,7 @@ Evaluate task performance with visualization.
 
 **Parameters:**
 - `task_name`: Task name ('go-nogo', 'xor', 'mante')
-- `model_dir`: Path to rate model directory
-- `n_trials`: Number of evaluation trials
-- `save_plots`: Whether to save the visualization plots (True or False)
+- `model_path`: Path to rate model .mat file
 
 ## Supported Model Format
 
@@ -170,7 +171,7 @@ from spiking.utils import format_spike_data
 spike_data = format_spike_data(spk, dt=0.00005)
 
 print(f"Total spikes: {spike_data['total_spikes']}")
-print(f"Active neurons: {len(spike_data['active_neurons'])}")
+print(f"Active neurons: {len(np.unique(spike_data['spike_neurons']))}")
 print(f"Mean firing rate: {np.mean(spike_data['firing_rates']):.2f} Hz")
 ```
 
@@ -249,7 +250,7 @@ Run the following script from the ``spikeRNN`` directory:
 
 ```bash
 python -m spiking.lambda_grid_search \
-        --model_dir "models/go-nogo/P_rec_0.2_Taus_4.0_20.0" \
+        --model_path "models/go-nogo/P_rec_0.2_Taus_4.0_20.0/model.mat" \
         --n_trials 50 \
         --scaling_factors 20:76:5 \
         --task_name go-nogo
@@ -284,7 +285,7 @@ W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(
 - `SpikingConfig`: Configuration dataclass
 - `create_default_spiking_config()`: Default configuration
 - `AbstractSpikingRNN`: Base class for extensions
-- `AbstractSpikingTask`: Base class for spiking RNN evaluation
+- `AbstractSpikingEvaluator`: Base class for spiking RNN evaluation
 
 ## Links
 

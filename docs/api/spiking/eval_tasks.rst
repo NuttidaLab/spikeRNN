@@ -24,7 +24,7 @@ Adapter Classes
 Overview
 ----------------------------------------------------------------------------------
 
-The eval_tasks module provides a high-level evaluation interface that standardizes the process of evaluating trained spiking RNN models across different cognitive tasks. The system is designed to be fully extensible, automatically supporting any task registered with the ``SpikingTaskFactory``.
+The eval_tasks module provides a high-level evaluation interface that standardizes the process of evaluating trained spiking RNN models across different cognitive tasks. The system is designed to be fully extensible, automatically supporting any task registered with the ``SpikingEvaluatorFactory``.
 
 **Key Features:**
 
@@ -35,13 +35,10 @@ The eval_tasks module provides a high-level evaluation interface that standardiz
 * **Robust Error Handling**: Graceful handling of evaluation failures
 * **Flexible Visualization**: Generic visualization system for any task type
 
-**Evaluation Layers:**
+**Evaluation:**
 
-The framework provides three levels of evaluation:
-
-1. **Core Task Methods**: Direct task evaluation (``task.evaluate_performance()``)
-2. **High-Level Interface**: Complete workflow (``evaluate_task()``)
-3. **Command-Line Interface**: Batch processing (``python -m spiking.eval_tasks``)
+1. **High-Level Interface**: Complete workflow (``evaluate_task()``)
+2. **Command-Line Interface**: Batch processing (``python -m spiking.eval_tasks``)
 
 Usage Examples
 ----------------------------------------------------------------------------------
@@ -54,49 +51,52 @@ Usage Examples
     
     # Evaluate any registered task
     performance = evaluate_task(
-        task_name='go_nogo',           # or 'xor', 'mante', custom tasks
-        model_dir='models/go-nogo/',
-        save_plots=True
+        task_name='go_nogo',
+        model_path='models/go-nogo/model.mat',
+        n_trials=50
     )
     
-    print(f"Accuracy: {performance['overall_accuracy']:.3f}")
+    print(f"Performance: {performance}")
 
 **Command-Line Interface:**
 
 .. code-block:: bash
 
     # Basic evaluation
-    python -m spiking.eval_tasks --task go_nogo --model_dir models/go-nogo/
+    python -m spiking.eval_tasks --task go_nogo --model_path models/go-nogo/model.mat
     
     # With custom parameters
     python -m spiking.eval_tasks \
         --task xor \
-        --model_dir models/xor/ \
+        --model_path models/xor/model.mat \
         --scaling_factor 45.0 \
-        --no_plots
+        --n_trials 50
     
     # Custom task (after registration)
-    python -m spiking.eval_tasks --task my_custom --model_dir models/custom/
+    python -m spiking.eval_tasks --task my_custom --model_path models/custom/model.mat
 
 **Custom Task Integration:**
 
 .. code-block:: python
 
-    from spiking.tasks import SpikingTaskFactory, AbstractSpikingTask
-    from spiking.eval_tasks import evaluate_task
-    
-    # 1. Define custom task
-    class WorkingMemoryTask(AbstractSpikingTask):
-        # ... implementation ...
-        pass
-    
+    from spiking.eval_tasks import SpikingEvaluatorFactory, evaluate_task
+    from rate.tasks import AbstractTask
+
+    # 1. Define custom evaluator (inheriting from a rate task class)
+    class WorkingMemoryEvaluator(AbstractTask):
+        def validate_settings(self):
+            pass
+        def evaluate_single_trial(self, model_path, scaling_factor, model_data=None):
+            # ... implementation ...
+            pass
+
     # 2. Register with factory
-    SpikingTaskFactory.register_task('working_memory', WorkingMemoryTask)
-    
+    SpikingEvaluatorFactory._registry['working_memory'] = WorkingMemoryEvaluator
+
     # 3. Evaluate using unified interface
     performance = evaluate_task(
-        task_name='working_memory',  # Now supported automatically
-        model_dir='models/working_memory/',
+        task_name='working_memory',
+        model_path='models/working_memory/model.mat',
     )
 
 Command-Line Arguments
@@ -108,21 +108,25 @@ Command-Line Arguments
 
    Task to evaluate. Available tasks are dynamically determined from the factory registry.
 
-.. option:: --model_dir MODEL_DIR
+.. option:: --model_path MODEL_PATH
 
-   Directory containing the trained model .mat file.
+   Path to the trained model .mat file.
 
 .. option:: --scaling_factor SCALING_FACTOR
 
    Override scaling factor (uses value from .mat file if not provided).
 
-.. option:: --no_plots
+.. option:: --n_trials N_TRIALS
 
-   Skip generating visualization plots.
+   Number of trials to evaluate.
 
 .. option:: --T T
 
    Trial duration (timesteps) - overrides task default.
+
+.. option:: --delay DELAY
+
+   Delay time (timesteps) - overrides task default.
 
 .. option:: --stim_on STIM_ON
 
@@ -142,20 +146,3 @@ The system automatically loads trained rate RNN models from `.mat` files and ext
 * Network weights and connectivity matrices
 * Optimal scaling factors for rate-to-spike conversion
 * Task-specific parameters and configurations
-
-**Generic Visualization:**
-
-The visualization system uses each task's ``get_sample_trial_types()`` method to determine what trial types to generate for plotting. This allows custom tasks to specify their own visualization patterns without modifying the evaluation code.
-
-**Error Handling:**
-
-The evaluation system includes comprehensive error handling:
-
-* Graceful handling of missing model files
-* Validation of task names against factory registry
-* Recovery from trial generation failures
-* Informative error messages for debugging
-
-**Extensibility:**
-
-The system is designed to be fully extensible. Any task that inherits from ``AbstractSpikingTask`` and is registered with ``SpikingTaskFactory`` can be evaluated using this unified interface.

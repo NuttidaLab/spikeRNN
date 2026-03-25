@@ -44,7 +44,9 @@ Functions:
     evaluate_task: Unified evaluation interface for all tasks
     load_rate_model: Load MATLAB .mat model files
     create_connectivity_masks: Generate network connectivity
+    generate_lif_params: Generate default LIF neuron parameters
     validate_stimulus: Validate input stimulus format
+    create_default_spiking_config: Create default spiking configuration
 """
 
 import warnings
@@ -73,14 +75,6 @@ from .abstract import (
     create_default_spiking_config
 )
 
-# Task classes
-from .tasks import (
-    AbstractSpikingTask,
-    GoNogoSpikingTask,
-    XORSpikingTask, 
-    ManteSpikingTask,
-    SpikingTaskFactory
-)
 
 # Version info
 __version__ = "0.1.0"
@@ -93,14 +87,7 @@ __all__ = [
     "LIF_network_fnc",
     "lambda_grid_search",
     "evaluate_task",
-    
-    # Task classes
-    "AbstractSpikingTask",
-    "GoNogoSpikingTask",
-    "XORSpikingTask",
-    "ManteSpikingTask", 
-    "SpikingTaskFactory",
-    
+
     # Utility functions
     "load_rate_model",
     "create_connectivity_masks",
