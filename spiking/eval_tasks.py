@@ -139,48 +139,56 @@ def _get_sample_trial_types(task_name: str) -> list:
 
 
 # Spiking Task Evaluator Classes
+# Each rate-task timestep maps to 100 LIF simulation timesteps
+_LIF_STEPS_PER_RATE_STEP = 100
+
+
 class GoNogoSpikingEvaluator(GoNogoTask):
     """Go/NoGo task evaluator for spiking networks."""
-    
+
     def __init__(self, settings: Dict[str, Any]):
         super().__init__(settings)
         # Add evaluation-specific settings with defaults
         self.eval_amp_thresh = settings.get('eval_amp_thresh', 0.7)
-        self.eval_end = settings.get('eval_end', 10000)
+        # Evaluate output after stimulus ends
+        self.eval_end = settings.get(
+            'eval_end',
+            (settings['stim_on'] + settings['stim_dur']) * _LIF_STEPS_PER_RATE_STEP
+        )
         
-    def evaluate_single_trial(self, model_path: str, scaling_factor: float) -> int:
+    def evaluate_single_trial(self, model_path: str, scaling_factor: float,
+                              model_data: Optional[Dict] = None) -> int:
         """
         Evaluate a single Go/NoGo trial using the original logic.
-        
+
         Args:
             model_path: Path to the model .mat file
             scaling_factor: Scaling factor for the model
-            
+            model_data: Pre-loaded model data dict. If None, loads from model_path.
+
         Returns:
             int: 1 if trial is correct, 0 if incorrect
         """
-        import scipy.io as sio
-        
-        model_data = sio.loadmat(model_path)
+        if model_data is None:
+            model_data = sio.loadmat(model_path)
         use_initial_weights = False
         down_sample = 1
 
         try:
-     
             T = self.settings['T']
-            stim_on = self.settings['stim_on'] 
+            stim_on = self.settings['stim_on']
             stim_dur = self.settings['stim_dur']
             eval_amp_thresh = self.eval_amp_thresh
-            
+
             u = np.zeros((1, T))
             trial_type = 0
             if np.random.rand() >= 0.50:
                 u[0, stim_on:stim_on+stim_dur] = 1.0
                 trial_type = 1
             stims = {'mode': 'none'}
-            
-            W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)   
-            
+
+            W, REC, spk, rs, all_fr, out, params = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)
+
             max_output = np.max(out[self.eval_end:])
             
             if trial_type == 1:  # Go trial
@@ -202,22 +210,27 @@ class XORSpikingEvaluator(XORTask):
         super().__init__(settings)
         # Add evaluation-specific settings with defaults
         self.eval_amp_thresh = settings.get('eval_amp_thresh', 0.7)
-        self.eval_end = settings.get('eval_end', 20000)
-    
-    def evaluate_single_trial(self, model_path: str, scaling_factor: float) -> int:
+        # Evaluate output after second stimulus ends
+        self.eval_end = settings.get(
+            'eval_end',
+            (settings['stim_on'] + 2 * settings['stim_dur'] + settings['delay']) * _LIF_STEPS_PER_RATE_STEP
+        )
+
+    def evaluate_single_trial(self, model_path: str, scaling_factor: float,
+                              model_data: Optional[Dict] = None) -> int:
         """
         Evaluate a single XOR trial using the original logic.
-        
+
         Args:
             model_path: Path to the model .mat file
             scaling_factor: Scaling factor for the model
-            
+            model_data: Pre-loaded model data dict. If None, loads from model_path.
+
         Returns:
             int: 1 if trial is correct, 0 if incorrect
         """
-        import scipy.io as sio
-        
-        model_data = sio.loadmat(model_path)
+        if model_data is None:
+            model_data = sio.loadmat(model_path)
         use_initial_weights = False
         down_sample = 1
 
@@ -263,22 +276,27 @@ class ManteSpikingEvaluator(ManteTask):
         super().__init__(settings)
         # Add evaluation-specific settings with defaults
         self.eval_amp_thresh = settings.get('eval_amp_thresh', 0.7)
-        self.eval_end = settings.get('eval_end', 26000)
+        # Evaluate output after stimulus ends
+        self.eval_end = settings.get(
+            'eval_end',
+            (settings['stim_on'] + settings['stim_dur']) * _LIF_STEPS_PER_RATE_STEP
+        )
         
-    def evaluate_single_trial(self, model_path: str, scaling_factor: float) -> int:
+    def evaluate_single_trial(self, model_path: str, scaling_factor: float,
+                              model_data: Optional[Dict] = None) -> int:
         """
         Evaluate a single Mante trial using the original logic.
-        
+
         Args:
             model_path: Path to the model .mat file
             scaling_factor: Scaling factor for the model
-            
+            model_data: Pre-loaded model data dict. If None, loads from model_path.
+
         Returns:
             int: 1 if trial is correct, 0 if incorrect
         """
-        import scipy.io as sio
-        
-        model_data = sio.loadmat(model_path)
+        if model_data is None:
+            model_data = sio.loadmat(model_path)
         use_initial_weights = False
         down_sample = 1
 
@@ -290,25 +308,20 @@ class ManteSpikingEvaluator(ManteTask):
             eval_amp_thresh = self.eval_amp_thresh
             
             u = np.zeros((4, T))
-            u_lab = np.zeros(2)
+            # Generate sensory inputs (same encoding as rate ManteTask)
+            color_input = 2.5 * (np.random.rand() - 0.5)   # [-1.25, 1.25]
+            motion_input = 2.5 * (np.random.rand() - 0.5)  # [-1.25, 1.25]
+
             if np.random.rand() >= 0.5:
-                u[0, stim_on:stim_on+stim_dur] = np.random.randn(stim_dur) + 0.5
-                u_lab[0] = 1
+                # Color context
+                u[0, stim_on:stim_on+stim_dur] = 1       # context cue
+                label = 1 if color_input > 0 else -1
             else:
-                u[0, stim_on:stim_on+stim_dur] = np.random.randn(stim_dur) - 0.5
-                u_lab[0] = -1
-            if np.random.rand() >= 0.5:
-                u[1, stim_on:stim_on+stim_dur] = np.random.randn(stim_dur) + 0.5
-                u_lab[1] = 1
-            else:
-                u[1, stim_on:stim_on+stim_dur] = np.random.randn(stim_dur) - 0.5
-                u_lab[1] = -1
-            if np.random.rand() >= 0.5:
-                u[2, :] = 1
-                label = u_lab[0]
-            else:
-                u[3, :] = 1
-                label = u_lab[1]
+                # Motion context
+                u[0, stim_on:stim_on+stim_dur] = -1      # context cue
+                label = 1 if motion_input > 0 else -1
+            u[1, stim_on:stim_on+stim_dur] = color_input  # color input
+            u[2, stim_on:stim_on+stim_dur] = motion_input # motion input
             stims = {'mode': 'none'}
             _, _, _, _, _, out, _ = LIF_network_fnc(model_data, scaling_factor, u, stims, down_sample, use_initial_weights)
             if (label == 1 and np.max(out[self.eval_end:]) > eval_amp_thresh) or (label == -1 and np.min(out[self.eval_end:]) < -eval_amp_thresh):
@@ -359,7 +372,8 @@ class SpikingEvaluatorFactory:
 
 
 def evaluate_single_trial(task_name: str, model_path: str, scaling_factor: float,
-                          settings: Optional[Dict[str, Any]] = None) -> int:
+                          settings: Optional[Dict[str, Any]] = None,
+                          model_data: Optional[Dict] = None) -> int:
     """
     Evaluate a single trial for a given task using the appropriate evaluator class.
 
@@ -368,6 +382,7 @@ def evaluate_single_trial(task_name: str, model_path: str, scaling_factor: float
         model_path: Path to the model .mat file
         scaling_factor: Scaling factor for the model
         settings: Optional custom settings. If None, uses default settings.
+        model_data: Pre-loaded model data dict. If None, loads from model_path.
 
     Returns:
         int: 1 if trial is correct, 0 if incorrect
@@ -381,9 +396,9 @@ def evaluate_single_trial(task_name: str, model_path: str, scaling_factor: float
 
         # Create the appropriate evaluator using the factory
         evaluator = SpikingEvaluatorFactory.create_evaluator(task_name, settings)
-        
+
         # Use the evaluator's evaluate_single_trial method
-        return evaluator.evaluate_single_trial(model_path, scaling_factor)
+        return evaluator.evaluate_single_trial(model_path, scaling_factor, model_data)
         
     except Exception as e:
         print(f"Error in evaluate_single_trial: {e}")
@@ -412,20 +427,20 @@ def evaluate_task(task_name: str, model_path: str,
     """
     # Load model and scaling factor
     model_path, scaling_factor = load_model_and_scaling_factor(model_path, optimal_scaling_factor)
-    
-    # Create spiking network adapter
-    spiking_rnn = LIFNetworkAdapter(model_path, scaling_factor)
-    
+
     # Create task using rate-based task factory
     task = TaskFactory.create_task(task_name, task_settings or _get_default_task_settings(task_name))
     print(f"Created {task.__class__.__name__} with settings: {task.settings}")
-    
+
+    # Load model data once and reuse across all trials
+    model_data = sio.loadmat(model_path)
+
     results = []
     correct_trials = 0
     incorrect_trials = 0
     # Evaluate single trial performance
     for i in range(n_trials):
-        result = evaluate_single_trial(task_name, model_path, scaling_factor, task.settings)
+        result = evaluate_single_trial(task_name, model_path, scaling_factor, task.settings, model_data)
         results.append(result)
         if result == 1:
             correct_trials += 1
@@ -441,9 +456,10 @@ def evaluate_task(task_name: str, model_path: str,
         # Generate all trial types
         sample_trial_types = _get_sample_trial_types(task_name)
         print(f"\nGenerating all trial types: {sample_trial_types}...")
-        
+
+        spiking_rnn = LIFNetworkAdapter(model_path, scaling_factor)
         results = []
-        
+
         for trial_type in sample_trial_types:
             try:
                 stimulus, target, label = task.simulate_trial(trial_type)
