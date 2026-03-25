@@ -58,6 +58,7 @@ from spiking.eval_tasks import GoNogoSpikingEvaluator, XORSpikingEvaluator, Mant
 ### Creating and Using Tasks
 
 ```python
+from rate import TaskFactory
 
 # Create task settings
 settings = {
@@ -262,16 +263,16 @@ The rate package save models in two formats:
 If you use this framework in your research, please cite:
 
 ```bibtex
-@article{kim2019neural,
-  title={Neural population dynamics underlying motor learning transfer},
-  author={Kim, T. D. and Lian, T. and Yang, G. R.},
-  journal={Neuron},
-  volume={103},
-  number={2},
-  pages={355--371},
-  year={2019},
-  publisher={Elsevier}
-}
+@article{Kim_2019,
+    Author = {Kim, Robert and Li, Yinghao and Sejnowski, Terrence J.},
+    Doi = {10.1073/pnas.1905926116},
+    Journal = {Proceedings of the National Academy of Sciences},
+    Number = {45},
+    Pages = {22811--22820},
+    Publisher = {National Academy of Sciences},
+    Title = {Simple framework for constructing functional spiking recurrent neural networks},
+    Volume = {116},
+    Year = {2019}}
 ```
 
 ## Contributing
