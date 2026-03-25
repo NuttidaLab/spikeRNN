@@ -215,7 +215,7 @@ lambda_grid_search(
 performance = evaluate_task(
     task_name='go_nogo',
     model_path='models/go-nogo/model.mat',
-    n_trails=50,
+    n_trials=50,
     task_settings=settings,
     all_trial_tasks=True
 )
