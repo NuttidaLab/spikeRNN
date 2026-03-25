@@ -16,27 +16,23 @@ Grid Search Parameters
 
 The main grid search function accepts:
 
-* ``model_path`` (str): Path to trained rate RNN model .mat file
-  (default: '../models/go-nogo/P_rec_0.2_Taus_4.0_20.0/model.mat')
-* ``task_name`` (str): Task type ('go_nogo', 'xor', or 'mante')
-  (default: 'go_nogo')
-* ``n_trials`` (int): Number of trials to evaluate each scaling factor
-  (default: 100)
-* ``scaling_factors`` (list): List of scaling factors to test
-  (default: [20, 25, 30, ..., 75])
+* ``model_path`` (str): Path to trained rate RNN model .mat file (required)
+* ``task_name`` (str): Task type ('go_nogo', 'xor', or 'mante'). Hyphens are accepted and normalized internally (e.g. 'go-nogo' becomes 'go_nogo'). (required)
+* ``n_trials`` (int): Number of trials to evaluate each scaling factor (required)
+* ``scaling_factors`` (list): List of scaling factors to test (required)
+* ``task_settings`` (dict, optional): Custom task settings (T, stim_on, stim_dur, delay, eval_amp_thresh). If None, uses task-specific defaults.
 
 Single Trial Evaluation
 ----------------------------------------------------
 
 The evaluate_single_trial function tests a specific scaling factor:
 
-* ``curr_full`` (str): Full path to model file
+* ``task_name`` (str): Name of the task to evaluate ('go_nogo', 'xor', 'mante')
+* ``model_path`` (str): Full path to model .mat file
 * ``scaling_factor`` (float): Scaling factor to test
-* ``task_name`` (str): Name of the task to evaluate
-* ``use_initial_weights`` (bool): Whether to use initial weights instead of trained weights
-* ``down_sample`` (int): Temporal downsampling factor
+* ``settings`` (dict, optional): Custom task settings. If None, uses task-specific defaults.
 
-Returns performance metrics for the given scaling factor.
+Returns 1 if the trial is correct, 0 if incorrect.
 
 Example Usage
 ----------------------------------------------------
@@ -45,15 +41,12 @@ Example Usage
 
    from spiking import lambda_grid_search
 
-   # Basic grid search with default parameters
-   lambda_grid_search()
-
    # Grid search with custom parameters
    lambda_grid_search(
        model_path='models/go-nogo/model.mat',
+       task_name='go_nogo',
        n_trials=50,
        scaling_factors=list(range(30, 81, 5)),
-       task_name='go_nogo'
    )
 
 Optimization Process

@@ -43,9 +43,9 @@ This script will test a range of scaling factors and save the best one to the `.
 
    python -m spiking.lambda_grid_search \
         --model_path models/go-nogo/model.mat \
-        --task_name go_nogo \
+        --task_name go-nogo \
         --n_trials 100 \
-        --scaling_factors 20:76:5
+        --scaling_factors 20:75:5
         
 
 Step 3: Analyze and Evaluate the Spiking Network
@@ -70,7 +70,7 @@ You can train and evaluate the network on different tasks by changing the --task
 Go-NoGo Task
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Training: ``... --task go_nogo ...``
+Training: ``... --task go-nogo ...``
 
 Evaluation: ``python -m spiking.eval_tasks --task go_nogo --model_path ...``
 
@@ -114,8 +114,9 @@ Required Parameters in .mat Files
        'exc': excitatory_indices,       # Boolean array for excitatory neurons
        'taus': time_constants,          # Synaptic time constants
        'taus_gaus': gaussian_taus,      # Gaussian time constants
-       'taus_gaus0': initia
-       
+       'taus_gaus0': initial_gaussian_taus,
+   }
+
 When you run the training command, these files are generated for you, so no manual creation is needed.
 
 

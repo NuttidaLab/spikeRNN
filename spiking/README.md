@@ -60,11 +60,11 @@ from spiking import lambda_grid_search
 
 # Find optimal scaling factor for your model
 opt_scaling_factor = lambda_grid_search(
-    task_name='go_nogo',
     model_path='models/go-nogo/model.mat',
-    task_settings=settings,
+    task_name='go_nogo',
     n_trials=50,
-    scaling_range=(20, 80),
+    scaling_factors=list(range(20, 81, 5)),
+    task_settings=settings,
 )
 ```
 
@@ -77,8 +77,8 @@ from spiking.eval_tasks import evaluate_task
 performance = evaluate_task(
     task_name='go_nogo',           # or 'xor', 'mante', custom tasks
     model_path='models/go-nogo/model.mat',
+    optimal_scaling_factor=opt_scaling_factor,
     task_settings=settings,
-    scaling_factor=opt_scaling_factor,
     n_trials=50
 )
 ```
@@ -171,7 +171,7 @@ from spiking.utils import format_spike_data
 spike_data = format_spike_data(spk, dt=0.00005)
 
 print(f"Total spikes: {spike_data['total_spikes']}")
-print(f"Active neurons: {len(spike_data['active_neurons'])}")
+print(f"Active neurons: {len(np.unique(spike_data['spike_neurons']))}")
 print(f"Mean firing rate: {np.mean(spike_data['firing_rates']):.2f} Hz")
 ```
 
@@ -253,7 +253,7 @@ python -m spiking.lambda_grid_search \
         --model_path "models/go-nogo/P_rec_0.2_Taus_4.0_20.0/model.mat" \
         --n_trials 50 \
         --scaling_factors 20:76:5 \
-        --task_name go_nogo
+        --task_name go-nogo
 ```
 
 # Step 3: Convert and simulate

@@ -76,20 +76,15 @@ There are two levels of evaluation available:
 
 .. code-block:: python
 
-    from spiking import SpikingTaskFactory
-    
-    # Create spiking task and network instances
-    task = SpikingTaskFactory.create_task('go_nogo')
-    spiking_rnn = MySpikingNetwork()  # Your network instance
+    from spiking.eval_tasks import SpikingEvaluatorFactory
+
+    # Create spiking evaluator with task settings
+    settings = {'T': 200, 'stim_on': 30, 'stim_dur': 20}
+    evaluator = SpikingEvaluatorFactory.create_evaluator('go_nogo', settings)
 
     # Evaluate a single trial
-    stimulus, label = task.generate_stimulus()
-    performance = task.evaluate_trial(spiking_rnn, stimulus, label)
-    print(f"Accuracy: {performance['correct']:.2f}")
-    
-    # Evaluate performance over multiple trials
-    performance = task.evaluate_performance(spiking_rnn, n_trials=10)
-    print(f"Accuracy: {performance['overall_accuracy']:.2f}")
+    result = evaluator.evaluate_single_trial(model_path, scaling_factor)
+    print(f"Trial correct: {result}")
 
 **Complete evaluation workflow (when you have a model file (with trained weights))**
 
@@ -103,7 +98,7 @@ There are two levels of evaluation available:
         model_path='models/go-nogo/model.mat',
         n_trials=50
     )
-    print(f"Accuracy: {performance['overall_accuracy']:.2f}")
+    print(f"Performance: {performance}")
 
 **Command-line interface**
 
@@ -119,12 +114,12 @@ Factory Pattern Usage
 .. code-block:: python
     
     from rate import TaskFactory
-    from spiking import SpikingTaskFactory
-    
+    from spiking.eval_tasks import SpikingEvaluatorFactory
+
     # List available tasks
     print("Rate tasks:", TaskFactory.list_available_tasks())
-    print("Spiking tasks:", SpikingTaskFactory.list_available_tasks())
-    
+    print("Spiking evaluators:", SpikingEvaluatorFactory.list_available_tasks())
+
     # Dynamic task creation
     for task_type in TaskFactory.list_available_tasks():
         task = TaskFactory.create_task(task_type, settings)
@@ -266,7 +261,7 @@ Once registered, your custom task works with the evaluation system:
     from spiking.eval_tasks import evaluate_task
     
     performance = evaluate_task(
-        task_name='my_custo_task',
+        task_name='my_custom',
         model_path='models/custom/model.mat',
     )
 

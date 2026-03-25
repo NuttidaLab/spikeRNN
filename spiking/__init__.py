@@ -44,7 +44,9 @@ Functions:
     evaluate_task: Unified evaluation interface for all tasks
     load_rate_model: Load MATLAB .mat model files
     create_connectivity_masks: Generate network connectivity
+    generate_lif_params: Generate default LIF neuron parameters
     validate_stimulus: Validate input stimulus format
+    create_default_spiking_config: Create default spiking configuration
 """
 
 import warnings

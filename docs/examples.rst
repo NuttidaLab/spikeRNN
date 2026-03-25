@@ -193,9 +193,9 @@ You can run the grid search from the command line:
 
     python -m spiking.lambda_grid_search \
         --model_path "models/go-nogo/model.mat" \
-        --task_name go_nogo \
+        --task_name go-nogo \
         --n_trials 100 \
-        --scaling_factors 20:76:5
+        --scaling_factors 20:75:5
 
 
 Or call the function from within a Python script:
@@ -209,7 +209,7 @@ Or call the function from within a Python script:
         model_path='models/go-nogo/model.mat',
         task_name='go_nogo',
         n_trials=100,
-        scaling_factors=(20, 76, 5)
+        scaling_factors=list(range(20, 76, 5))
     )
 
 Task Performance Evaluation

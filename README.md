@@ -92,7 +92,7 @@ print(f"Trial result: {performance}")
 performance = evaluate_task(
     task_name='go_nogo',
     model_path='models/go-nogo/model.mat',
-    save_plots=True
+    n_trials=50
 )
 
 # Command line interface (for scripts and automation)
@@ -205,7 +205,7 @@ import numpy as np
 # Optimize scaling factor
 lambda_grid_search(
     model_path='models/go-nogo/model.mat',
-    task_name='go-nogo',
+    task_name='go_nogo',
     n_trials=100,
     scaling_factors=list(np.arange(25, 76, 5)),
     task_settings=settings
@@ -217,7 +217,7 @@ performance = evaluate_task(
     model_path='models/go-nogo/model.mat',
     n_trials=50,
     task_settings=settings,
-    all_trial_tasks=True
+    all_trial_types=True
 )
 ```
 

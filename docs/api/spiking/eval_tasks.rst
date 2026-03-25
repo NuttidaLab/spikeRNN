@@ -24,7 +24,7 @@ Adapter Classes
 Overview
 ----------------------------------------------------------------------------------
 
-The eval_tasks module provides a high-level evaluation interface that standardizes the process of evaluating trained spiking RNN models across different cognitive tasks. The system is designed to be fully extensible, automatically supporting any task registered with the ``SpikingTaskFactory``.
+The eval_tasks module provides a high-level evaluation interface that standardizes the process of evaluating trained spiking RNN models across different cognitive tasks. The system is designed to be fully extensible, automatically supporting any task registered with the ``SpikingEvaluatorFactory``.
 
 **Key Features:**
 
@@ -79,17 +79,20 @@ Usage Examples
 
 .. code-block:: python
 
-    from spiking.tasks import SpikingTaskFactory, AbstractSpikingTask
-    from spiking.eval_tasks import evaluate_task
-    
-    # 1. Define custom task
-    class WorkingMemoryTask(AbstractSpikingTask):
-        # ... implementation ...
-        pass
-    
+    from spiking.eval_tasks import SpikingEvaluatorFactory, evaluate_task
+    from rate.tasks import AbstractTask
+
+    # 1. Define custom evaluator (inheriting from a rate task class)
+    class WorkingMemoryEvaluator(AbstractTask):
+        def validate_settings(self):
+            pass
+        def evaluate_single_trial(self, model_path, scaling_factor, model_data=None):
+            # ... implementation ...
+            pass
+
     # 2. Register with factory
-    SpikingTaskFactory.register_task('working_memory', WorkingMemoryTask)
-    
+    SpikingEvaluatorFactory._registry['working_memory'] = WorkingMemoryEvaluator
+
     # 3. Evaluate using unified interface
     performance = evaluate_task(
         task_name='working_memory',

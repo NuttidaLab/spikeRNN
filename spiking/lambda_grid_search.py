@@ -73,7 +73,7 @@ def lambda_grid_search(model_path, task_name, n_trials, scaling_factors,
     
     Args:
         model_path: Path to the trained model .mat file
-        task_name: Name of the task ('go-nogo', 'xor', 'mante')
+        task_name: Name of the task ('go_nogo', 'xor', 'mante'). Hyphens accepted (e.g. 'go-nogo').
         n_trials: Number of trials to run for each scaling factor
         scaling_factors: List of scaling factors to test
         task_settings: Optional custom task settings. If None, uses default settings.
