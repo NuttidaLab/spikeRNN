@@ -29,6 +29,9 @@ from tasks import TaskFactory
 
 from model import loss_op
 
+# Exponentiated Gradient optimizer
+from eg_optimizer import ExponentiatedGradient
+
 # Parse input arguments
 parser = argparse.ArgumentParser(description='Training rate RNNs')
 parser.add_argument('--gpu', required=False,
@@ -60,6 +63,12 @@ parser.add_argument("--act", required=True,
         type=str, default='sigmoid', help="Activation function (sigmoid, clipped_relu)")
 parser.add_argument("--loss_fn", required=True,
         type=str, default='l2', help="Loss function (either L1 or L2)")
+parser.add_argument("--optimizer", required=False,
+        type=str, default='adam', help="Optimizer to use (adam or eg)")
+parser.add_argument("--momentum", required=False,
+        type=float, default = 0.0, help="Momentum for the EG optimizer")
+parser.add_argument("--weight_decay", required=False,
+        type=float, default = 0.0, help="Weight decay for the EG optimizer")
 parser.add_argument("--apply_dale", required=True,
         type=str2bool, default='True', help="Apply Dale's principle?")
 parser.add_argument("--decay_taus", required=True,
@@ -165,14 +174,48 @@ training_params = {
         'eval_amp_threh': 0.3, # amplitude threshold during response window
         'activation': args.act.lower(), # activation function
         'loss_fn': args.loss_fn.lower(), # loss function ('L1' or 'L2')
-        'P_rec': 0.20
+        'P_rec': 0.20, # initial connectivity probability
+        'momentum': args.momentum,  # momentum (alpha)
+        'weight_decay': args.weight_decay, # weight decay (gamma)
+        'optimizer': args.optimizer.lower(), # optimizer to use (`adam` or `eg`)
         }
 
 '''
 Set up optimizer
 '''
 if args.mode.lower() == 'train':
-    optimizer = optim.Adam(net.parameters(), lr=training_params['learning_rate'])
+    if args.optimizer.lower() == 'adam':
+        print('Using Adam optimizer for all parameters...')
+        optimizer = optim.Adam(net.parameters(), lr=training_params['learning_rate'])
+        training_params['optimizer'] = 'adam'
+    
+    elif args.optimizer.lower() == 'eg':
+        print('Using Exponentiated Gradient (EG) for recurrent weights (w) and Adam for others...')
+        eg_params = []
+        adam_params = []
+        
+        for name, param in net.named_parameters():
+            if name == 'w':
+                # Apply EG only to the recurrent weight magnitudes 'w'
+                eg_params.append(param)
+            else:
+                # Apply Adam to all other parameters (w_in, w_out, b_out)
+                adam_params.append(param)
+        
+        # Create two optimizers
+        optimizer_eg = ExponentiatedGradient(eg_params, 
+                                            lr=training_params['learning_rate'],
+                                            weight_decay=training_params.get('weight_decay', 0.0))
+        
+        optimizer_adam = optim.Adam(adam_params, lr=training_params['learning_rate'])
+        
+        # use a list to hold both and iterate during train step
+        optimizer = [optimizer_eg, optimizer_adam]
+        training_params['optimizer'] = 'eg'
+
+    else:
+        raise ValueError(f"Unknown optimizer: {args.optimizer}")
+    
     print('Set up optimizer...')
 
 '''
@@ -200,7 +243,11 @@ if args.mode.lower() == 'train':
         start_time = time.time()
         
         # Zero gradients
-        optimizer.zero_grad()
+        if isinstance(optimizer, list):
+            for opt in optimizer:
+                opt.zero_grad()
+        else:
+            optimizer.zero_grad()
 
         # Generate a task-specific input signal
         u, target, label = task.simulate_trial()
@@ -213,13 +260,19 @@ if args.mode.lower() == 'train':
         # Forward pass
         stim, x, r, o, w, w_in, m, som_m, w_out, b_out, taus_gaus = \
                 net.forward(u_tensor, settings['taus'], training_params, settings)
-
+        
         # Compute loss
         t_loss = loss_op(o, target, training_params)
 
         # Backward pass
         t_loss.backward()
-        optimizer.step()
+        
+        # Optimizer step
+        if isinstance(optimizer, list):
+            for opt in optimizer:
+                opt.step()
+        else:
+            optimizer.step()
 
         print('Loss: ', t_loss.item())
         losses[tr] = t_loss.item()
@@ -404,15 +457,23 @@ if args.mode.lower() == 'train':
     scipy.io.savemat(os.path.join(out_dir, fname), var)
     
     # Also save the PyTorch model
-    torch.save({
+    if isinstance(optimizer, list):
+        optimizer_state = {f'optimizer_{i}_state_dict': opt.state_dict() 
+                          for i, opt in enumerate(optimizer)}
+    else:
+        optimizer_state = {'optimizer_state_dict': optimizer.state_dict()}
+    
+    save_dict = {
         'model_state_dict': net.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
         'settings': settings,
         'training_params': training_params,
         'losses': losses,
         'final_loss': t_loss.item(),
         'trial': tr,
-        }, os.path.join(out_dir, fname.replace('.mat', '.pth'))) 
+    }
+    save_dict.update(optimizer_state)
+    
+    torch.save(save_dict, os.path.join(out_dir, fname.replace('.mat', '.pth'))) 
     
     
     

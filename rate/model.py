@@ -138,7 +138,12 @@ class FR_RNN_dale(nn.Module):
 
         if self.apply_dale == True:
             w = np.abs(w)
-        
+            
+            # add a small positive value to the weights to avoid division by zero
+            # nonzero_mask = w > 0
+            # w[nonzero_mask] = np.maximum(w[nonzero_mask], 1e-8)
+                
+                 
         # Mask matrix
         mask = np.eye(self.N, dtype=np.float32)
         mask[np.where(self.inh==True)[0], np.where(self.inh==True)[0]] = -1
@@ -198,6 +203,7 @@ class FR_RNN_dale(nn.Module):
         print('\t Zero Weights: %2.2f %%' % (zero_w/(self.N*self.N)*100))
         print('\t Positive Weights: %2.2f %%' % (pos_w/(self.N*self.N)*100))
         print('\t Negative Weights: %2.2f %%' % (neg_w/(self.N*self.N)*100))
+    
 
     def forward(self, stim: torch.Tensor, taus: List[float], training_params: Dict[str, Any], 
                 settings: Dict[str, Any]) -> Tuple[torch.Tensor, List[torch.Tensor], List[torch.Tensor], 
@@ -254,14 +260,16 @@ class FR_RNN_dale(nn.Module):
         
         # Forward pass through time
         for t in range(1, T):
-            if self.apply_dale == True:
+            # When using EG optimizer, weights are non-negative by construction
+            # so no need for ReLU. For Adam optimizer with Dale's principle, use ReLU.
+            if self.apply_dale == True and training_params.get('optimizer', 'adam') != 'eg':
                 # Parametrize the weight matrix to enforce exc/inh synaptic currents
-                w_pos = F.relu(self.w)
+                w = F.relu(self.w)
             else:
-                w_pos = self.w
+                w = self.w
             
             # Compute effective weight matrix
-            ww = torch.matmul(w_pos, self.mask)
+            ww = torch.matmul(w, self.mask)
             ww = ww * self.som_mask
             
             # Compute time constants
@@ -412,7 +420,7 @@ def loss_op(o: List[torch.Tensor], z: Union[np.ndarray, torch.Tensor], training_
     return loss
 
 def eval_rnn(net: FR_RNN_dale, settings: Dict[str, Any], u: np.ndarray, 
-             device: torch.device) -> Tuple[List[float], List[np.ndarray], List[np.ndarray]]:
+             device: torch.device, training_params: Dict[str, Any] = None) -> Tuple[List[float], List[np.ndarray], List[np.ndarray]]:
     """
     Evaluate a trained PyTorch RNN.
 
@@ -421,6 +429,8 @@ def eval_rnn(net: FR_RNN_dale, settings: Dict[str, Any], u: np.ndarray,
         settings (Dict[str, Any]): Dictionary containing task settings.
         u (np.ndarray): Stimulus matrix.
         device (torch.device): PyTorch device.
+        training_params (Dict[str, Any], optional): Dictionary containing training parameters 
+                                                    including optimizer type. Defaults to None.
 
     Returns:
         Tuple[List[float], List[np.ndarray], List[np.ndarray]]: Tuple containing:
@@ -431,6 +441,10 @@ def eval_rnn(net: FR_RNN_dale, settings: Dict[str, Any], u: np.ndarray,
     T = settings['T']
     DeltaT = settings['DeltaT']
     taus = settings['taus']
+    
+    # Default training_params if not provided
+    if training_params is None:
+        training_params = {'optimizer': 'adam'}
     
     net.eval()
     with torch.no_grad():
@@ -443,10 +457,11 @@ def eval_rnn(net: FR_RNN_dale, settings: Dict[str, Any], u: np.ndarray,
         o = []
         
         for t in range(1, T):
-            if net.apply_dale:
+            # When using EG optimizer, weights are non-negative by construction
+            if net.apply_dale and training_params.get('optimizer', 'adam') != 'eg':
                 w_pos = F.relu(net.w)
             else:
-                w_pos = net.w
+                w_pos = net.w  # non-negative by construction
             
             ww = torch.matmul(w_pos, net.mask)
             ww = ww * net.som_mask
